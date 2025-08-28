@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def ordenar_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd.DataFrame:
@@ -17,24 +18,28 @@ def ordenar_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) ->
     return df.sort_values(by=sort_by, ascending=ascending)
 
 
-def renombrar_columnas(df:pd.DataFrame, columnas:dict) -> pd.DataFrame:
+def renombrar_columnas(df: pd.DataFrame, columnas_dict: dict) -> pd.DataFrame:
     '''
-    Modifica el nombre de la/s columna/s pasada/s en un diccionario y da la opción de capitalizarlas
-    
-    ejemplo: columnas={'viejo_nombre1':'nuevo_nombre1', 'viejo_nombre2':'nuevo_nombre2'}
-    
-    Args:
-        df (pd.DataFrame): Data frame de Pandas que contiene las columnas a renombrar
-        columnas (dict): Diccionario de renombrado {viejo_nombre: nuevo_nombre}
-        
-    Returns:
-        df: Dataframe con columnas renombradas
+    Renombra columnas funcionando con ambos formatos (string e integer)
     '''
-    if isinstance(columnas, dict):
-        return df.rename(columns=columnas)
+    # Verificar qué formato tienen las columnas actuales
+    current_columns = list(df.columns)
+    
+    # Si las columnas son integers, convertir el diccionario
+    if all(isinstance(col, (int, np.integer)) for col in current_columns): 
+        columnas_int = {int(k): v for k, v in columnas_dict.items()}
+        return df.rename(columns=columnas_int)
+    
+    # Si las columnas son strings, usar el diccionario tal cual
+    elif all(isinstance(col, str) for col in current_columns):
+        return df.rename(columns=columnas_dict)
+    
     else:
-        print('Las columnas deben ser pasadas en un diccionario')
-        return None
+        try:
+            columnas_int = {int(k): v for k, v in columnas_dict.items()}
+            return df.rename(columns=columnas_int)
+        except:
+            return df.rename(columns=columnas_dict)
     
     
 def castear_tipos_de_dato(df: pd.DataFrame, conversion_mapping: dict) -> pd.DataFrame:

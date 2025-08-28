@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def eliminar_duplicados(df: pd.DataFrame, subset:str=None, keep='first') -> pd.DataFrame:
+def eliminar_duplicados(df: pd.DataFrame, subset:list=None, keep='first') -> pd.DataFrame:
     """
     Elimina filas duplicadas en un DataFrame según una columna,
     manteniendo la primera aparición.
@@ -13,7 +13,7 @@ def eliminar_duplicados(df: pd.DataFrame, subset:str=None, keep='first') -> pd.D
     Returns:
         pd.DataFrame: DataFrame sin duplicados en la columna especificada.
     """
-    return df.drop_duplicates(subset, keep=keep)
+    return df.drop_duplicates(subset, keep)
 
 
 def eliminar_registros_nulos(df: pd.DataFrame, subset: list) -> pd.DataFrame:
