@@ -28,6 +28,7 @@ from .paths import (
     PATH_GOLD_PIVOT_TABLE_FULL
 )
 from .logging_config import setup_logging
+from .constants import COLS
 
 __all__ = [
     'BINANCE_BASE_URL',
@@ -55,5 +56,6 @@ __all__ = [
     'PATH_GOLD_SUMARIZED_TABLE_INCREMENTAL',
     'PATH_GOLD_SUMARIZED_TABLE_FULL',
     'PATH_GOLD_PIVOT_TABLE_FULL',
-    'setup_logging'
+    'setup_logging',
+    'COLS'
 ]
