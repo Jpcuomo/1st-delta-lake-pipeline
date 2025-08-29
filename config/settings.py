@@ -17,10 +17,16 @@ ENDPOINT = "api/v3/klines"
 
 START_TIME = set_fecha_inicial("2024-07-31 00:00:00Z")
 END_TIME = set_fecha_final("2025-07-31 23:59:59Z")
+INTERVAL = '1d'
+
+# Symbol specific (podría venir de variable de entorno)
+SYMBOL = "SOLUSDT"
+
+
 
 PARAMS = {
-        'symbol':'SOLUSDT',
-        'interval':'1d',
+        'symbol':SYMBOL,
+        'interval':INTERVAL,
         'startTime':START_TIME,
         'endTime':END_TIME,
         'limit':1000
@@ -39,6 +45,3 @@ RETRY_DELAY = 5  # seconds
 DELTA_FORMAT = "delta"
 PARQUET_FORMAT = "parquet"
 ENGINE = 'pyarrow'
-
-# Symbol specific (podría venir de variable de entorno)
-SYMBOL = "SOLUSDT"

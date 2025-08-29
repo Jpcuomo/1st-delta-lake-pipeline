@@ -13,7 +13,7 @@ def eliminar_duplicados(df: pd.DataFrame, subset:list=None, keep='first') -> pd.
     Returns:
         pd.DataFrame: DataFrame sin duplicados en la columna especificada.
     """
-    return df.drop_duplicates(subset, keep)
+    return df.drop_duplicates(subset=subset, keep=keep)
 
 
 def eliminar_registros_nulos(df: pd.DataFrame, subset: list) -> pd.DataFrame:
@@ -62,4 +62,10 @@ def contar_registros_nulos(df: pd.DataFrame, subset: list) -> None:
     for col in subset:
         print(f"Valores nulos en columna {col}: {df[col].isnull().sum()}")
         
+        
+def eliminar_columnas(df:pd.DataFrame, columnas:list) -> pd.DataFrame:
+    '''
+    Elimina la/s columna/s pasadas como parametro
+    '''
+    return df.drop(columns=columnas)
         

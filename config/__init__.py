@@ -10,7 +10,8 @@ from .settings import (
     DELTA_FORMAT,
     PARQUET_FORMAT,
     ENDPOINT,
-    SYMBOL
+    SYMBOL,
+    INTERVAL
     )
 from .paths import (
     BASE_DIR,
@@ -28,7 +29,7 @@ from .paths import (
     PATH_GOLD_PIVOT_TABLE_FULL
 )
 from .logging_config import setup_logging
-from .constants import COLS
+from .constants import COLS, CONVERSION_MAPPING
 
 __all__ = [
     'BINANCE_BASE_URL',
@@ -57,5 +58,7 @@ __all__ = [
     'PATH_GOLD_SUMARIZED_TABLE_FULL',
     'PATH_GOLD_PIVOT_TABLE_FULL',
     'setup_logging',
-    'COLS'
+    'COLS',
+    'CONVERSION_MAPPING',
+    'INTERVAL'
 ]
