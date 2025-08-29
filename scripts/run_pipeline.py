@@ -49,8 +49,8 @@ def run_full_pipeline():
         from config.constants import COLS, CONVERSION_MAPPING
         
         # Modificacion de columnas
+        df_clean = eliminar_columnas(df_clean, [11])
         df_clean = renombrar_columnas(df_raw, COLS)
-        df_clean = eliminar_columnas(df_clean, ['ignore'])
         
         # Verifico tipos de datos y espacio en memoria
         mostrar_espacio_en_memoria_df(df_clean) 

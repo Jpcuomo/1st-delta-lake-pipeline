@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def eliminar_duplicados(df: pd.DataFrame, subset:list=None, keep='first') -> pd.DataFrame:
@@ -67,5 +68,7 @@ def eliminar_columnas(df:pd.DataFrame, columnas:list) -> pd.DataFrame:
     '''
     Elimina la/s columna/s pasadas como parametro
     '''
-    return df.drop(columns=columnas)
+    if all(isinstance(col, (int, np.integer)) for col in columnas):
+        string_cols = [str(col) for col in columnas]
+    return df.drop(columns=string_cols)
         
