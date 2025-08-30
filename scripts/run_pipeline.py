@@ -101,14 +101,23 @@ def run_full_pipeline():
         # Agrego a la tabla una columna con el total de trades por año
         df_sumarized["total_trades_per_year"] = (
             df_sumarized.groupby(level=0)["total_trades"].transform("sum")
-)
-        
+        )   
+    
         print(df_sumarized.head())
+        
+        df_pivot = pd.pivot_table(
+        df_clean,
+        values="num_trades", # Columna donde se aplican las agregaciones
+        index=["year", "month"], # GROUP BY
+        aggfunc=["min", "max","sum"] # Tipos de agregaciones a aplicar sobre num_trades
+        )
+        print(df_pivot.head())
+        
         
         # 4. CARGA
         logger.info("Etapa 4: Carga")
         from src.load.delta_writer import save_data_as_delta
-        from config import PATH_BRONZE_DELTALAKE_FULL, PATH_SILVER_DELTALAKE_FULL, PATH_GOLD_SUMARIZED_TABLE_FULL
+        from config import PATH_BRONZE_DELTALAKE_FULL, PATH_SILVER_DELTALAKE_FULL, PATH_GOLD_SUMARIZED_TABLE_FULL, PATH_GOLD_PIVOT_TABLE_FULL
         
         # Guardar en bronze (datos crudos)
         save_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_FULL / f"{SYMBOL}_raw")
@@ -119,6 +128,8 @@ def run_full_pipeline():
         # Guardar en gold (datos agregados)
         save_data_as_delta(df_sumarized, PATH_GOLD_SUMARIZED_TABLE_FULL / f"{SYMBOL}_agg")
         
+        # Guardar en gold (tabla pivote)
+        save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{SYMBOL}_pivot")
         
         # 5. QUALITY CHECK
         logger.info("Etapa 5: Control de calidad")
@@ -128,6 +139,7 @@ def run_full_pipeline():
         report_path = Path("reports") / f"profile_{SYMBOL}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(exist_ok=True)
         report.to_file(report_path)
+
         
         # Métricas finales
         end_time = datetime.now()
