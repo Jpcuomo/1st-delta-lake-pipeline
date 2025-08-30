@@ -49,8 +49,9 @@ def run_full_pipeline():
         from config.constants import COLS, CONVERSION_MAPPING
         
         # Modificacion de columnas
-        df_clean = eliminar_columnas(df_clean, [11])
+        df_raw = eliminar_columnas(df_raw, [11])
         df_clean = renombrar_columnas(df_raw, COLS)
+        print(df_clean.head())
         
         # Verifico tipos de datos y espacio en memoria
         mostrar_espacio_en_memoria_df(df_clean) 
@@ -107,16 +108,16 @@ def run_full_pipeline():
         # 4. CARGA
         logger.info("Etapa 4: Carga")
         from src.load.delta_writer import save_data_as_delta
-        from config import BRONZE_DIR, SILVER_DIR, GOLD_DIR
+        from config import PATH_BRONZE_DELTALAKE_FULL, PATH_SILVER_DELTALAKE_FULL, PATH_GOLD_SUMARIZED_TABLE_FULL
         
         # Guardar en bronze (datos crudos)
-        save_data_as_delta(df_raw, BRONZE_DIR / f"{SYMBOL}_raw")
+        save_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_FULL / f"{SYMBOL}_raw")
         
         # Guardar en silver (datos procesados)
-        save_data_as_delta(df_clean, SILVER_DIR / f"{SYMBOL}_clean")
+        save_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_FULL / f"{SYMBOL}_clean")
         
         # Guardar en gold (datos agregados)
-        save_data_as_delta(df_sumarized, GOLD_DIR / f"{SYMBOL}_agg")
+        save_data_as_delta(df_sumarized, PATH_GOLD_SUMARIZED_TABLE_FULL / f"{SYMBOL}_agg")
         
         
         # 5. QUALITY CHECK

@@ -68,7 +68,8 @@ def eliminar_columnas(df:pd.DataFrame, columnas:list) -> pd.DataFrame:
     '''
     Elimina la/s columna/s pasadas como parametro
     '''
-    if all(isinstance(col, (int, np.integer)) for col in columnas):
-        string_cols = [str(col) for col in columnas]
-    return df.drop(columns=string_cols)
+    # if all(isinstance(col, (int, np.integer)) for col in columnas):
+    #     columnas = [str(col) for col in columnas]
+        
+    return df.drop(columns=columnas)
         

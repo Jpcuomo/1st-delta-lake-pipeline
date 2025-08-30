@@ -17,19 +17,19 @@ PATH_ARCHIVO_INCREMENTAL = BASE_DIR / "metadata" / "incremental.json"
 
 # Capa Bronze - Datos crudos
 BRONZE_DIR = BASE_DIR / "data" / "bronze"
-PATH_BRONZE_DELTALAKE_FULL = BRONZE_DIR / "api_binance" / "klines" / "sol_usdt"
-PATH_BRONZE_DELTALAKE_INCREMENTAL = BRONZE_DIR / "api_binance" / "historicalTrades" / "sol_usdt"
+PATH_BRONZE_DELTALAKE_FULL = BRONZE_DIR / "api_binance" / "klines" 
+PATH_BRONZE_DELTALAKE_INCREMENTAL = BRONZE_DIR / "api_binance" / "historicalTrades" 
 
 # Capa Silver - Datos limpios
 SILVER_DIR = BASE_DIR / "data" / "silver"
-PATH_SILVER_DELTALAKE_FULL = SILVER_DIR / "api_binance" / "klines" / "sol_usdt"
-PATH_SILVER_DELTALAKE_INCREMENTAL = SILVER_DIR / "api_binance" / "historicalTrades" / "sol_usdt"
+PATH_SILVER_DELTALAKE_FULL = SILVER_DIR / "api_binance" / "klines" 
+PATH_SILVER_DELTALAKE_INCREMENTAL = SILVER_DIR / "api_binance" / "historicalTrades" 
 
 # Capa Gold - Datos enriquecidos
 GOLD_DIR = BASE_DIR / "data" / "gold"
-PATH_GOLD_SUMARIZED_TABLE_INCREMENTAL = GOLD_DIR / "api_binance" / "historicalTrades" / "sumarized_table" / "sol_usdt"
-PATH_GOLD_SUMARIZED_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "sumarized_table" / "sol_usdt"
-PATH_GOLD_PIVOT_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "pivot_table" / "sol_usdt"
+PATH_GOLD_SUMARIZED_TABLE_INCREMENTAL = GOLD_DIR / "api_binance" / "historicalTrades" / "sumarized_table" 
+PATH_GOLD_SUMARIZED_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "sumarized_table" 
+PATH_GOLD_PIVOT_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "pivot_table" 
 
 # Crear directorios si no existen
 for path in [

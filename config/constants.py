@@ -11,8 +11,7 @@ COLS = {
     7:"quote_asset_volume",
     8:"num_trades",
     9:"tb_base_asset_volume",
-    10:"tb_quote_asset_volume",
-    11:"ignore"}
+    10:"tb_quote_asset_volume"}
 
 CONVERSION_MAPPING = {
     "open":"float32",
