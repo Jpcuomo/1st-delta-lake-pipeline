@@ -49,9 +49,9 @@ def run_full_pipeline():
         from config.constants import COLS, CONVERSION_MAPPING
         
         # Modificacion de columnas
-        df_raw = eliminar_columnas(df_raw, [11])
         df_clean = renombrar_columnas(df_raw, COLS)
         print(df_clean.head())
+        df_clean = eliminar_columnas(df_clean, ['ignore'])
         
         # Verifico tipos de datos y espacio en memoria
         mostrar_espacio_en_memoria_df(df_clean) 
@@ -100,7 +100,7 @@ def run_full_pipeline():
 
         # Agrego a la tabla una columna con el total de trades por año
         df_sumarized["total_trades_per_year"] = (
-            df_sumarized.groupby(level=0)["total_trades"].transform("sum")
+            df_sumarized.groupby('year')["total_trades"].transform("sum")
         )   
     
         print(df_sumarized.head())
