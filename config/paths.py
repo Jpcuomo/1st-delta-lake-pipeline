@@ -27,8 +27,8 @@ PATH_SILVER_DELTALAKE_INCREMENTAL = SILVER_DIR / "api_binance" / "historicalTrad
 
 # Capa Gold - Datos enriquecidos
 GOLD_DIR = BASE_DIR / "data" / "gold"
-PATH_GOLD_SUMARIZED_TABLE_INCREMENTAL = GOLD_DIR / "api_binance" / "historicalTrades" / "sumarized_table" 
-PATH_GOLD_SUMARIZED_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "sumarized_table" 
+PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL = GOLD_DIR / "api_binance" / "historicalTrades" / "summarized_table" 
+PATH_GOLD_SUMMARIZED_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "summarized_table" 
 PATH_GOLD_PIVOT_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "pivot_table" 
 
 # Crear directorios si no existen
@@ -40,8 +40,8 @@ for path in [
     PATH_BRONZE_DELTALAKE_INCREMENTAL,
     PATH_SILVER_DELTALAKE_FULL, 
     PATH_SILVER_DELTALAKE_INCREMENTAL,
-    PATH_GOLD_SUMARIZED_TABLE_INCREMENTAL, 
-    PATH_GOLD_SUMARIZED_TABLE_FULL,
+    PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL, 
+    PATH_GOLD_SUMMARIZED_TABLE_FULL,
     PATH_GOLD_PIVOT_TABLE_FULL
 ]:
     path.mkdir(parents=True, exist_ok=True)

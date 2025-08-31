@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Pipeline completo ETL para datos de Binance.
-Ejecuta: extracción → transformación → carga
+Pipeline completo ETL para extracción full de datos de API de Binance.
+Ejecuta: extracción -> transformación -> carga
 """
 
 import logging
@@ -96,14 +96,14 @@ def run_full_pipeline():
 
 
         # Crear cuadro con agregaciones para análisis
-        df_sumarized = sumarizar_df(df_clean, by_col, agg_col, rename_cols)
+        df_summarized = sumarizar_df(df_clean, by_col, agg_col, rename_cols)
 
         # Agrego a la tabla una columna con el total de trades por año
-        df_sumarized["total_trades_per_year"] = (
-            df_sumarized.groupby('year')["total_trades"].transform("sum")
+        df_summarized["total_trades_per_year"] = (
+            df_summarized.groupby('year')["total_trades"].transform("sum")
         )   
     
-        print(df_sumarized.head())
+        print(df_summarized.head())
         
         df_pivot = pd.pivot_table(
         df_clean,
@@ -117,7 +117,7 @@ def run_full_pipeline():
         # 4. CARGA
         logger.info("Etapa 4: Carga")
         from src.load.delta_writer import save_data_as_delta
-        from config import PATH_BRONZE_DELTALAKE_FULL, PATH_SILVER_DELTALAKE_FULL, PATH_GOLD_SUMARIZED_TABLE_FULL, PATH_GOLD_PIVOT_TABLE_FULL
+        from config import PATH_BRONZE_DELTALAKE_FULL, PATH_SILVER_DELTALAKE_FULL, PATH_GOLD_SUMMARIZED_TABLE_FULL, PATH_GOLD_PIVOT_TABLE_FULL
         
         # Guardar en bronze (datos crudos)
         save_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_FULL / f"{SYMBOL}_raw")
@@ -126,7 +126,7 @@ def run_full_pipeline():
         save_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_FULL / f"{SYMBOL}_clean")
         
         # Guardar en gold (datos agregados)
-        save_data_as_delta(df_sumarized, PATH_GOLD_SUMARIZED_TABLE_FULL / f"{SYMBOL}_agg")
+        save_data_as_delta(df_summarized, PATH_GOLD_SUMMARIZED_TABLE_FULL / f"{SYMBOL}_agg")
         
         # Guardar en gold (tabla pivote)
         save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{SYMBOL}_pivot")

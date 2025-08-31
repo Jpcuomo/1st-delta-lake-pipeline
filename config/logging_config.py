@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-def setup_logging(level=logging.INFO):
+def setup_logging(level:int=logging.INFO) -> None:
     """Configuración centralizada de logging"""
     Path('logs').mkdir(exist_ok=True)
     
