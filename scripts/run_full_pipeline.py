@@ -8,16 +8,14 @@ import logging
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
+from config.logging_config import setup_logging
 from src.utils.helpers import setup_paths
 
-
+# Configuracion de paths para importaciones
 setup_paths()
 
 # Configuración de logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+setup_logging()
 
 logger = logging.getLogger("pipeline")
 
