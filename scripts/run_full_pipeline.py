@@ -15,7 +15,7 @@ from src.utils.helpers import setup_paths
 setup_paths()
 
 # Configuración de logging
-setup_logging()
+setup_logging('full')
 
 logger = logging.getLogger("pipeline")
 
