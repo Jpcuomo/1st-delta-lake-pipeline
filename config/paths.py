@@ -9,11 +9,13 @@ from pathlib import Path
 # Directorio base del proyecto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Metadatos
+INCREMENTAL_DIR = Path("metadata") / "incremental.json"
+CARPETA_INCREMENTAL = INCREMENTAL_DIR.parent
+ARCHIVO_INCREMENTAL = INCREMENTAL_DIR.name
+
 # Configuración
 API_AUTH_PATH = BASE_DIR / "config" / "api_auth.conf"
-
-# Metadatos
-PATH_ARCHIVO_INCREMENTAL = BASE_DIR / "metadata" / "incremental.json"
 
 # Capa Bronze - Datos crudos
 BRONZE_DIR = BASE_DIR / "data" / "bronze"
@@ -34,6 +36,7 @@ PATH_GOLD_PIVOT_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "pivot_table"
 # Crear directorios si no existen
 for path in [
     BRONZE_DIR, 
+    CARPETA_INCREMENTAL,
     SILVER_DIR, 
     GOLD_DIR,
     PATH_BRONZE_DELTALAKE_FULL, 

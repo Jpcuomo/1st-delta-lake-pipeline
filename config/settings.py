@@ -11,6 +11,12 @@ API_SECCION = 'binance'
 API_KEY = leer_archivo_conf(API_AUTH_PATH, API_SECCION)
 KEY = API_KEY['clave_api']
 
+#--------------------------------------------------------------------------------
+# Contenido archivo incremental
+CONTENIDO_INCREMENTAL = {'valor_previo':0,'ultimo_valor':0}
+
+
+#--------------------------------------------------------------------------------
 # API Settings
 BINANCE_BASE_URL = "https://api.binance.com"
 ENDPOINT = "api/v3/klines"
@@ -21,8 +27,6 @@ INTERVAL = '1d'
 
 # Symbol specific (podría venir de variable de entorno)
 SYMBOL = "SOLUSDT"
-
-
 
 PARAMS = {
         'symbol':SYMBOL,
@@ -36,6 +40,7 @@ HEADERS = {
             "X-MBX-APIKEY":KEY
         }
 
+#--------------------------------------------------------------------------------
 # Data Processing
 DEFAULT_PARTITION_COLS = ["date"]
 MAX_RETRIES = 3

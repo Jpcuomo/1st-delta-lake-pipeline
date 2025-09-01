@@ -8,8 +8,8 @@ import logging
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
-from config.logging_config import setup_logging
 from src.utils.helpers import setup_paths
+from config.logging_config import setup_logging
 
 # Configuracion de paths para importaciones
 setup_paths()
@@ -27,6 +27,7 @@ def run_full_pipeline():
         start_time = datetime.now()
         
         
+        #-------------------------------------------------------------------------------------
         # 1. EXTRACCIÓN
         logger.info("Etapa 1: Extracción")
         from src.extract.api_extractor import get_data
@@ -39,6 +40,7 @@ def run_full_pipeline():
         logger.info(f"Extraídos {len(df_raw)} registros")
         
         
+        #-------------------------------------------------------------------------------------
         # 2. TRANSFORMACIÓN
         logger.info("Etapa 2: Transformación")
         from src.transform.data_cleaning import eliminar_duplicados, eliminar_registros_nulos, eliminar_columnas
@@ -69,6 +71,7 @@ def run_full_pipeline():
         print(df_clean.head())
         
         
+        #-------------------------------------------------------------------------------------
         # 3. SUMARIZACION
         logger.info("Etapa 3: Sumarizacion")
         from src.transform.aggregations import sumarizar_df
@@ -79,30 +82,17 @@ def run_full_pipeline():
         
         # Sumarización de data frame
         by_col = ['year', 'month']
-        agg_col = {
-            'low':'mean',
-            'high':'mean',
-            'volume':'mean',
-            'num_trades':'sum'
-        }
-        rename_cols = {
-            'low':'avg_low_price',
-            'high':'avg_high_price',
-            'volume':'avg_volume',
-            'num_trades':'total_trades'
-        }
-
+        agg_col = {'low':'mean','high':'mean','volume':'mean','num_trades':'sum'}
+        rename_cols = {'low':'avg_low_price','high':'avg_high_price','volume':'avg_volume','num_trades':'total_trades'}
 
         # Crear cuadro con agregaciones para análisis
         df_summarized = sumarizar_df(df_clean, by_col, agg_col, rename_cols)
 
         # Agrego a la tabla una columna con el total de trades por año
-        df_summarized["total_trades_per_year"] = (
-            df_summarized.groupby('year')["total_trades"].transform("sum")
-        )   
-    
+        df_summarized["total_trades_per_year"] = (df_summarized.groupby(level=0)["total_trades"].transform("sum"))   
         print(df_summarized.head())
-        
+    
+        # Tabla pivote adicional
         df_pivot = pd.pivot_table(
         df_clean,
         values="num_trades", # Columna donde se aplican las agregaciones
@@ -112,6 +102,7 @@ def run_full_pipeline():
         print(df_pivot.head())
         
         
+        #-------------------------------------------------------------------------------------
         # 4. CARGA
         logger.info("Etapa 4: Carga")
         from src.load.delta_writer import save_data_as_delta
@@ -129,6 +120,8 @@ def run_full_pipeline():
         # Guardar en gold (tabla pivote)
         save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{SYMBOL}_pivot")
         
+        
+        #-------------------------------------------------------------------------------------
         # 5. QUALITY CHECK
         logger.info("Etapa 5: Control de calidad")
         from src.quality.profiling import generar_profiling_report
@@ -138,7 +131,8 @@ def run_full_pipeline():
         report_path.parent.mkdir(exist_ok=True)
         report.to_file(report_path)
 
-        
+
+        #-------------------------------------------------------------------------------------
         # Métricas finales
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
