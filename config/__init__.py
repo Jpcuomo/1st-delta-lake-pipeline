@@ -1,19 +1,11 @@
-from .settings import (
-    BINANCE_BASE_URL,
-    START_TIME,
-    END_TIME,
-    PARAMS,
-    HEADERS,
-    DEFAULT_PARTITION_COLS,
-    MAX_RETRIES,
-    RETRY_DELAY,
-    DELTA_FORMAT,
-    PARQUET_FORMAT,
-    ENDPOINT,
-    SYMBOL,
-    INTERVAL,
-    CONTENIDO_INCREMENTAL
+from .binance_klines_settings import (
+    BINANCE_KLINES
     )
+
+from .binance_hist_trading_settings import (
+    CONTENIDO_INCREMENTAL, BINANCE_HIST_TRADES, DATA_PROCESING, FILE_FORMATS
+)
+
 from .paths import (
     BASE_DIR,
     API_AUTH_PATH,
@@ -31,26 +23,16 @@ from .paths import (
     CARPETA_INCREMENTAL,
     ARCHIVO_INCREMENTAL
 )
+
 from .logging_config import setup_logging
+
 from .constants import COLS, CONVERSION_MAPPING
 
 __all__ = [
-    'BINANCE_BASE_URL',
     'ARCHIVO_INCREMENTAL',
     'INCREMENTAL_DIR',
     'CARPETA_INCREMENTAL',
     'CONTENIDO_INCREMENTAL',
-    'DEFAULT_PARTITION_COLS',
-    'START_TIME',
-    'END_TIME',
-    'PARAMS',
-    'HEADERS',
-    'MAX_RETRIES',
-    'RETRY_DELAY',
-    'DELTA_FORMAT',
-    'PARQUET_FORMAT',
-    'ENDPOINT',
-    'SYMBOL',
     'BASE_DIR',
     'API_AUTH_PATH',
     'BRONZE_DIR',
@@ -66,5 +48,8 @@ __all__ = [
     'setup_logging',
     'COLS',
     'CONVERSION_MAPPING',
-    'INTERVAL'
+    'BINANCE_KLINES',
+    'BINANCE_HIST_TRADES',
+    'DATA_PROCESING',
+    'FILE_FORMATS'
 ]

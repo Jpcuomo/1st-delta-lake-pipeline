@@ -32,9 +32,10 @@ def run_full_pipeline():
         logger.info("Etapa 1: Extracción")
         from src.extract.api_extractor import get_data
         from src.extract.data_loader import build_table
-        from config import BINANCE_BASE_URL, SYMBOL, ENDPOINT, PARAMS, HEADERS
+        from config.binance_klines_settings import BINANCE_KLINES
+        print(BINANCE_KLINES)
         
-        datos = get_data(BINANCE_BASE_URL, endpoint=ENDPOINT, params=PARAMS, headers=HEADERS)
+        datos = get_data(BINANCE_KLINES['base_url'], BINANCE_KLINES['endpoint'], params=BINANCE_KLINES['params'], headers=BINANCE_KLINES['headers'])
      
         df_raw = build_table(datos)
         logger.info(f"Extraídos {len(df_raw)} registros")
@@ -109,16 +110,16 @@ def run_full_pipeline():
         from config import PATH_BRONZE_DELTALAKE_FULL, PATH_SILVER_DELTALAKE_FULL, PATH_GOLD_SUMMARIZED_TABLE_FULL, PATH_GOLD_PIVOT_TABLE_FULL
         
         # Guardar en bronze (datos crudos)
-        save_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_FULL / f"{SYMBOL}_raw")
+        save_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_FULL / f"{BINANCE_KLINES['params']['symbol']}_raw")
         
         # Guardar en silver (datos procesados)
-        save_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_FULL / f"{SYMBOL}_clean")
+        save_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_FULL / f"{BINANCE_KLINES['params']['symbol']}_clean")
         
         # Guardar en gold (datos agregados)
-        save_data_as_delta(df_summarized, PATH_GOLD_SUMMARIZED_TABLE_FULL / f"{SYMBOL}_agg")
+        save_data_as_delta(df_summarized, PATH_GOLD_SUMMARIZED_TABLE_FULL / f"{BINANCE_KLINES['params']['symbol']}_agg")
         
         # Guardar en gold (tabla pivote)
-        save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{SYMBOL}_pivot")
+        save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{BINANCE_KLINES['params']['symbol']}_pivot")
         
         
         #-------------------------------------------------------------------------------------
@@ -127,7 +128,7 @@ def run_full_pipeline():
         from src.quality.profiling import generar_profiling_report
         
         report = generar_profiling_report(df_clean)
-        report_path = Path("reports") / f"profile_{SYMBOL}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
+        report_path = Path("reports") / f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(exist_ok=True)
         report.to_file(report_path)
 
