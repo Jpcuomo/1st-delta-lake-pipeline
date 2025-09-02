@@ -42,3 +42,15 @@ FILE_FORMATS = {
     'engine':'pyarrow'
 }
 
+NOMBRE_COLUMNAS_DESEADAS = {
+    'time': 'miliseconds',
+    'qty': 'quantity',
+    'quoteQty': 'quote_qty',
+    'isBuyerMaker': 'is_buyer_maker'
+}
+
+CONVERSION_MAPPING = {
+    'price':'float32',
+    'quantity':'float32',
+    'quote_qty':'float32'
+}

@@ -62,7 +62,7 @@ def contar_registros_nulos(df: pd.DataFrame, subset: list) -> None:
     '''
     for col in subset:
         print(f"Valores nulos en columna {col}: {df[col].isnull().sum()}")
-        
+  
         
 def eliminar_columnas(df:pd.DataFrame, columnas:list) -> pd.DataFrame:
     '''
