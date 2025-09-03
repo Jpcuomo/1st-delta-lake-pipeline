@@ -4,7 +4,7 @@ import pandas as pd
 import pyarrow as pa
 from deltalake import write_deltalake, DeltaTable
 from deltalake.exceptions import TableNotFoundError
-from utils.config_utils import obtener_archivo_incremental
+from src.utils.config_utils import obtener_archivo_incremental
 
 
 def leer_delta_lake(path:str) -> pd.DataFrame|None:

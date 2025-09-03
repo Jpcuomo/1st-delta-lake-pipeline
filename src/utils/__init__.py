@@ -10,7 +10,6 @@ __all__ = [
     'obtener_archivo_incremental', 
     'guardar_formato_parquet', 
     'crear_archivo_incremental', 
-    'obtener_archivo_incremental', 
     'guardar_formato_parquet', 
     'mostrar_espacio_en_memoria_df',
     'setup_paths', 

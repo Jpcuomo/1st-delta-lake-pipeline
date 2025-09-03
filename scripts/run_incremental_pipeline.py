@@ -4,22 +4,22 @@ Pipeline completo ETL para extracción incremental de API de Binance
 Realiza extracción -> transformación -> carga -> quality testing
 """
 
-import logging
 import os
+import logging
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from src.utils.helpers import setup_paths
-from src.utils.file_utils import crear_archivo_incremental
 from config.logging_config import setup_logging
-from config.binance_hist_trading_settings import CONTENIDO_INCREMENTAL
+from src.utils.file_utils import crear_archivo_incremental
+from config.binance_hist_trading_settings import CONTENIDO_INCREMENTAL, BINANCE_HIST_TRADES
 from config.paths import ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL, INCREMENTAL_DIR
 
 
 # Configuracion de paths para importaciones
 setup_paths()
 
-# Congiguracion de logging
+# Configuracion de logging
 setup_logging('incremental')
 logger = logging.getLogger('pipeline')
 
@@ -41,36 +41,31 @@ def run_incremental_pipeline():
         #-----------------------------------------------------------------------------------------
         logger.info('Etapa 1: Extracción')
         
-        from src.extract.api_extractor import get_data_incremental
-        from config.paths import INCREMENTAL_DIR, PATH_BRONZE_DELTALAKE_INCREMENTAL, PATH_SILVER_DELTALAKE_INCREMENTAL, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL
-        from config.binance_hist_trading_settings import BINANCE_HIST_TRADES
-        from src.load.delta_writer import leer_extraccion_reciente, save_new_data_as_delta, save_data_as_delta
+        # Importación de módulos
+        from config.paths import PATH_BRONZE_DELTALAKE_INCREMENTAL, PATH_SILVER_DELTALAKE_INCREMENTAL, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL
+        from src.load.delta_writer import save_new_data_as_delta, leer_extraccion_reciente, save_data_as_delta
+        from src.extract.incremental_extraction import extract_from_api
         
-        # Trayendo datos desde la API
-        datos = get_data_incremental(INCREMENTAL_DIR, 
-                                    BINANCE_HIST_TRADES['base_url'], 
-                                    BINANCE_HIST_TRADES['endpoint'], 
-                                    params=BINANCE_HIST_TRADES['params'], 
-                                    headers=BINANCE_HIST_TRADES['headers'])
-            
-        from src.extract.data_loader import build_table
-        
-        # Conversión a Data Frame de los datos extraidos
-        df_raw = build_table(datos)
+        # Extracción de datos de la API
+        df_raw = extract_from_api(extraction_limit=1000, batch_qtty=5)        
         
         # Guardo el DataFrame en formato Delta Lake
         # Como los campos nuevos son siempre distintos utilizo un MERGE sin UPDATE
         save_new_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_INCREMENTAL, 'src.id = tgt.id')
         logger.info('Datos cargados en capa bronze exitosamente.')
         
-        print(df_raw.head())
-        # Traigo solo los valores de la última extracción para el preocesamiento
+        # Traigo solo los valores de la última extracción para el procesamiento
         df_raw = leer_extraccion_reciente(PATH_BRONZE_DELTALAKE_INCREMENTAL, INCREMENTAL_DIR)
         
-        
         metricas['filas_extraidas'] = len(df_raw)
-        logger.info(f'Filas extraidas: {metricas['filas_extraidas']}')
+        min_id = df_raw['id'].min()
+        max_id = df_raw['id'].max()
+        metricas['min_id'] = min_id
+        metricas['max_id'] = max_id
         
+        logger.info(f'Filas extraidas: {metricas['filas_extraidas']}')
+        logger.info(f'Filas extraidas desde id {metricas['min_id']} hasta id {metricas['max_id']}')
+        print(metricas)
         
         #-----------------------------------------------------------------------------------------
         logger.info('Etapa 2: Transformación')

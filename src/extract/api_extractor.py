@@ -1,7 +1,7 @@
 import json
 import requests
 import pandas as pd
-from utils.config_utils import obtener_archivo_incremental
+from src.utils.config_utils import obtener_archivo_incremental
 
 
 def get_data(base_url:str, endpoint:str, data_field:str=None, params:dict=None, headers:dict=None) -> dict | list | None:

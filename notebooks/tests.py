@@ -1,5 +1,18 @@
 from pathlib import Path
+from config.paths import PATH_BRONZE_DELTALAKE_INCREMENTAL
+import pandas as pd
+from src.load.delta_writer import leer_delta_lake
 
-base_dir = Path(__file__).resolve().parent.parent
 
-print(base_dir)
+df = leer_delta_lake(PATH_BRONZE_DELTALAKE_INCREMENTAL)
+
+print(df.head())
+
+max_id = df['id'].max()
+min_id = df['id'].min()
+print(min_id, max_id)
+
+
+df_total = leer_delta_lake(PATH_BRONZE_DELTALAKE_INCREMENTAL)
+print(df_total.to_string())
+print(df_total.shape[0])
