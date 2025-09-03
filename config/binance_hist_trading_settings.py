@@ -10,21 +10,27 @@ CONTENIDO_INCREMENTAL = {'valor_previo':0,'ultimo_valor':0}
 
 #--------------------------------------------------------------------------------
 # Parametros de la API
+
+BASE_URL = 'https://api.binance.com/api/v3'
+ENDPOINT = 'historicalTrades'
+SYMBOL = 'SOLUSDT'
+LIMIT = 1000
+FROM_ID = 0
+BATCH_QTTY = 10
+
 BINANCE_HIST_TRADES = {
-    'base_url':'https://api.binance.com/api/v3',
-    'endpoint':"historicalTrades",
+    'base_url':BASE_URL,
+    'endpoint':ENDPOINT,
     'params':{
-        "symbol": "symbol", 
-        "limit": 'limit',
-        'fromId':'fromId'
+        "symbol": SYMBOL, 
+        "limit": LIMIT,
+        'fromId':FROM_ID
         },
-    'headers':{"X-MBX-APIKEY":KEY}
+    'headers':{"X-MBX-APIKEY":KEY},
+    'batch_qtty':BATCH_QTTY
 }
 
 # Configuración de parámetros
-BINANCE_HIST_TRADES['params']['symbol'] = 'SOLUSDT'
-BINANCE_HIST_TRADES['params']['limit'] = 1000
-BINANCE_HIST_TRADES['params']['fromId'] = 0
 
 #--------------------------------------------------------------------------------
 # Data Processing

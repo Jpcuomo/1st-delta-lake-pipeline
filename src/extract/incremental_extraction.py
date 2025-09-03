@@ -1,18 +1,26 @@
 import pandas as pd
+import logging
 from src.extract.api_extractor import get_data_incremental
+from src.extract.data_loader import build_table
 from config.paths import INCREMENTAL_DIR
 from config.binance_hist_trading_settings import BINANCE_HIST_TRADES
-from src.extract.data_loader import build_table
+from config.logging_config import setup_logging
 
+logger = logging.getLogger('pipeline')
 
-def extract_from_api(extraction_limit=1000, batch_qtty=None):
-    """Extrae la cantidad de lotes pasados como parametro"""
+def extract_from_api() -> pd.DataFrame:
+    """
+    Extrae datos incrementales desde la API de Binance en múltiples lotes.
     
+    Returns:
+        pd.DataFrame: DataFrame con la concatenación de todos los lotes extraídos.
+    """
     # Trayendo datos desde la API
-    BINANCE_HIST_TRADES['params']['limit'] = extraction_limit
-    
     batch_list = []
-    for _ in range(batch_qtty or 1):
+    batch_qtty = BINANCE_HIST_TRADES.get('batch_qtty', 1)
+    registros = BINANCE_HIST_TRADES['params']['limit']
+    for i in range(batch_qtty):
+        logger.info(f'Extrayendo lote n°{i+1} con {registros} registros')
         datos = get_data_incremental(INCREMENTAL_DIR, 
                                     BINANCE_HIST_TRADES['base_url'], 
                                     BINANCE_HIST_TRADES['endpoint'], 
@@ -21,6 +29,7 @@ def extract_from_api(extraction_limit=1000, batch_qtty=None):
         # Conversión a Data Frame de los datos extraidos
         df = build_table(datos)
         batch_list.append(df)
+    logger.info(f'Se extrajeron {batch_qtty} lotes')
     df_raw = pd.concat(batch_list, ignore_index=True)
     return df_raw
     

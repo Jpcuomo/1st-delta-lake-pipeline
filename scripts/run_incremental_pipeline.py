@@ -12,8 +12,13 @@ from datetime import datetime
 from src.utils.helpers import setup_paths
 from config.logging_config import setup_logging
 from src.utils.file_utils import crear_archivo_incremental
-from config.binance_hist_trading_settings import CONTENIDO_INCREMENTAL, BINANCE_HIST_TRADES
-from config.paths import ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL, INCREMENTAL_DIR
+from config.binance_hist_trading_settings import CONTENIDO_INCREMENTAL, BINANCE_HIST_TRADES, NOMBRE_COLUMNAS_DESEADAS, CONVERSION_MAPPING
+from config.paths import ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL, INCREMENTAL_DIR, PATH_BRONZE_DELTALAKE_INCREMENTAL, PATH_SILVER_DELTALAKE_INCREMENTAL, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL
+from src.load.delta_writer import save_new_data_as_delta, leer_extraccion_reciente, save_data_as_delta
+from src.extract.incremental_extraction import extract_from_api
+from src.transform import contar_registros_nulos, ordenar_dataframe, eliminar_duplicados, renombrar_columnas, convertir_milisegundos_a_datetime, castear_tipos_de_dato, cambiar_posicion_de_columna
+from src.utils.memory_utils import mostrar_espacio_en_memoria_df
+from src.transform.aggregations import sumarizar_df
 
 
 # Configuracion de paths para importaciones
@@ -31,6 +36,7 @@ if not os.path.exists(INCREMENTAL_DIR): # Esta línea evita que se reinicie a 0 
 def run_incremental_pipeline():
     """Ejecuta el pipeline ETL completo"""
     try:
+        logger.info('---------------------------------------------------------------------------------------')
         logger.info('Iniciando pipeline completo.')
         
         # Inicia conteo del tiempo de ejecución
@@ -39,15 +45,10 @@ def run_incremental_pipeline():
         
         
         #-----------------------------------------------------------------------------------------
-        logger.info('Etapa 1: Extracción')
-        
-        # Importación de módulos
-        from config.paths import PATH_BRONZE_DELTALAKE_INCREMENTAL, PATH_SILVER_DELTALAKE_INCREMENTAL, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL
-        from src.load.delta_writer import save_new_data_as_delta, leer_extraccion_reciente, save_data_as_delta
-        from src.extract.incremental_extraction import extract_from_api
+        logger.info('Etapa 1: Extracción')        
         
         # Extracción de datos de la API
-        df_raw = extract_from_api(extraction_limit=1000, batch_qtty=5)        
+        df_raw = extract_from_api()        
         
         # Guardo el DataFrame en formato Delta Lake
         # Como los campos nuevos son siempre distintos utilizo un MERGE sin UPDATE
@@ -65,14 +66,12 @@ def run_incremental_pipeline():
         
         logger.info(f'Filas extraidas: {metricas['filas_extraidas']}')
         logger.info(f'Filas extraidas desde id {metricas['min_id']} hasta id {metricas['max_id']}')
-        print(metricas)
+
         
         #-----------------------------------------------------------------------------------------
         logger.info('Etapa 2: Transformación')
         
-        from src.transform import contar_registros_nulos, ordenar_dataframe, eliminar_duplicados, renombrar_columnas, convertir_milisegundos_a_datetime, castear_tipos_de_dato, cambiar_posicion_de_columna
-        from src.utils.memory_utils import mostrar_espacio_en_memoria_df
-        from config.binance_hist_trading_settings import NOMBRE_COLUMNAS_DESEADAS, CONVERSION_MAPPING
+        
             
         # Verificación de tipos de datos y espacio en memoria antes de iniciar transformaciones.
         mostrar_espacio_en_memoria_df(df_raw)
@@ -137,7 +136,7 @@ def run_incremental_pipeline():
             'id':'id_count'
         }
 
-        from src.transform.aggregations import sumarizar_df
+        
         # Asigna el DF sumarizado a un nuevo DF
         df_sumarizado = sumarizar_df(df_clean, group_by_cols, agg_dict, rename_cols)
 
