@@ -5,13 +5,16 @@ Realiza extracción -> transformación -> carga -> quality testing
 """
 
 import logging
+import os
 import pandas as pd
+from pathlib import Path
 from datetime import datetime
 from src.utils.helpers import setup_paths
-from src.utils.file_utils import crear_archivo_incremental, obtener_archivo_incremental
+from src.utils.file_utils import crear_archivo_incremental
 from config.logging_config import setup_logging
 from config.binance_hist_trading_settings import CONTENIDO_INCREMENTAL
 from config.paths import ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL, INCREMENTAL_DIR
+
 
 # Configuracion de paths para importaciones
 setup_paths()
@@ -21,7 +24,7 @@ setup_logging('incremental')
 logger = logging.getLogger('pipeline')
 
 # Creación de archivo json con metadata
-if CONTENIDO_INCREMENTAL['valor_previo'] == 0: # Esta línea evita que se reinicie a 0 en cada ejecución
+if not os.path.exists(INCREMENTAL_DIR): # Esta línea evita que se reinicie a 0 en cada ejecución
     crear_archivo_incremental(CONTENIDO_INCREMENTAL, ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL)
 
 
@@ -39,20 +42,32 @@ def run_incremental_pipeline():
         logger.info('Etapa 1: Extracción')
         
         from src.extract.api_extractor import get_data_incremental
-        from config.paths import INCREMENTAL_DIR
+        from config.paths import INCREMENTAL_DIR, PATH_BRONZE_DELTALAKE_INCREMENTAL, PATH_SILVER_DELTALAKE_INCREMENTAL, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL
         from config.binance_hist_trading_settings import BINANCE_HIST_TRADES
+        from src.load.delta_writer import leer_extraccion_reciente, save_new_data_as_delta, save_data_as_delta
         
         # Trayendo datos desde la API
         datos = get_data_incremental(INCREMENTAL_DIR, 
-                                     BINANCE_HIST_TRADES['base_url'], 
-                                     BINANCE_HIST_TRADES['endpoint'], 
-                                     params=BINANCE_HIST_TRADES['params'], 
-                                     headers=BINANCE_HIST_TRADES['headers'])
+                                    BINANCE_HIST_TRADES['base_url'], 
+                                    BINANCE_HIST_TRADES['endpoint'], 
+                                    params=BINANCE_HIST_TRADES['params'], 
+                                    headers=BINANCE_HIST_TRADES['headers'])
             
         from src.extract.data_loader import build_table
         
         # Conversión a Data Frame de los datos extraidos
         df_raw = build_table(datos)
+        
+        # Guardo el DataFrame en formato Delta Lake
+        # Como los campos nuevos son siempre distintos utilizo un MERGE sin UPDATE
+        save_new_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_INCREMENTAL, 'src.id = tgt.id')
+        logger.info('Datos cargados en capa bronze exitosamente.')
+        
+        print(df_raw.head())
+        # Traigo solo los valores de la última extracción para el preocesamiento
+        df_raw = leer_extraccion_reciente(PATH_BRONZE_DELTALAKE_INCREMENTAL, INCREMENTAL_DIR)
+        
+        
         metricas['filas_extraidas'] = len(df_raw)
         logger.info(f'Filas extraidas: {metricas['filas_extraidas']}')
         
@@ -63,7 +78,7 @@ def run_incremental_pipeline():
         from src.transform import contar_registros_nulos, ordenar_dataframe, eliminar_duplicados, renombrar_columnas, convertir_milisegundos_a_datetime, castear_tipos_de_dato, cambiar_posicion_de_columna
         from src.utils.memory_utils import mostrar_espacio_en_memoria_df
         from config.binance_hist_trading_settings import NOMBRE_COLUMNAS_DESEADAS, CONVERSION_MAPPING
-        
+            
         # Verificación de tipos de datos y espacio en memoria antes de iniciar transformaciones.
         mostrar_espacio_en_memoria_df(df_raw)
         
@@ -71,7 +86,7 @@ def run_incremental_pipeline():
         cols = df_raw.columns
         contar_registros_nulos(df_raw, cols)
         
-        #Ordeno por 'id' y elimino duplicados de haberlos
+        # Ordeno por 'id' y elimino duplicados de haberlos
         df_clean = ordenar_dataframe(df_raw, sort_by='id')
         
         # Eliminación de registros duplicados
@@ -92,7 +107,7 @@ def run_incremental_pipeline():
         
         # Extraer solo la hora (0–23) como int
         df_clean["hr"] = pd.to_datetime(df_clean["time"], unit="ms").dt.hour.astype("int32")
-        
+
         # Elimino la columna auxiliar 'time', ya que no es necesaria
         # Elimino la columna 'is_best_match' ya que es siempre True y no suma al análisis
         df_clean = df_clean.drop(columns=['time','isBestMatch'])
@@ -108,16 +123,71 @@ def run_incremental_pipeline():
         mostrar_espacio_en_memoria_df(df_clean)
         
         
-        #-----------------------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------------------
+        logger.info('Etapa 3: Sumarización')
+        
+        group_by_cols = ['date','hr','is_buyer_maker'] # Lista de columnas por las que agrupar
+
+        agg_dict = {# Diccionario con columnas como clave y agregaciones como valor
+            'price':'mean',      # promedio de la columna 'price'
+            'quantity':'sum',    # promedio de la columna 'quantity'
+            'quote_qty':'sum',   # Sumatoria de cantidades
+            'id':'count'         # cuenta de registros por grupo
+        }
+
+        rename_cols = {# Diccionario con los cambios de nombres para las columnas agregadas
+            'price':'mean_price',
+            'quantity':'qty_per_hour',
+            'quote_qty':'total_quote_qty',
+            'id':'id_count'
+        }
+
+        from src.transform.aggregations import sumarizar_df
+        # Asigna el DF sumarizado a un nuevo DF
+        df_sumarizado = sumarizar_df(df_clean, group_by_cols, agg_dict, rename_cols)
+
+        # Redondeo para presentación
+        cols = ['mean_price', 'qty_per_hour', 'total_quote_qty']
+        df_sumarizado[cols] = df_sumarizado[cols].round(3).map("{:.3f}".format)
+
+        df_sumarizado.head()
+        
+        
+        # -----------------------------------------------------------------------------------------
+        logger.info('Etapa 4: Carga')
+        
+        # Guardo el DF en la capa silver, particionando por fecha y hora.
+        save_new_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_INCREMENTAL, 'src.id = tgt.id', ['date','hr'])
+        logger.info('Datos cargados en capa silver exitosamente.')
+        
+        # Guardado del DF en formato Delta Lake, en modo 'overwrite' por defecto
+        # Este modo sobreescribe los cambios, pero permite consultar registro histórico
+        save_data_as_delta(df_sumarizado, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL)
+        logger.info('Datos cargados en capa gold exitosamente.')
+        
+        
+        #-------------------------------------------------------------------------------------
+        # 5. QUALITY CHECK
+        logger.info("Etapa 5: Control de calidad")
+        from src.quality.profiling import generar_profiling_report
+        
+        report = generar_profiling_report(df_clean)
+        report_path = Path("reports") / "incremental" / f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
+        report_path.parent.mkdir(exist_ok=True)
+        report.to_file(report_path)
+
+        # -----------------------------------------------------------------------------------------
+        # Métricas finales
         end_time = datetime.now()
         metricas['end_time'] = end_time
         
         duration = (end_time - start_time).total_seconds()
         logger.info(f'Pipeline completado en: {duration:.2f} segundos')
-        
+        logger.info(f"Registros procesados: {len(df_clean)}")
+        logger.info(f"Reporte guardado en: {report_path}")
     except Exception as e:
         logger.error(f'No se pudo correr el pipeline: {e}')
-        
+        raise
     
 if __name__=='__main__':
     run_incremental_pipeline()

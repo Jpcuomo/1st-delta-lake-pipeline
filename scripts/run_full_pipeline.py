@@ -128,7 +128,7 @@ def run_full_pipeline():
         from src.quality.profiling import generar_profiling_report
         
         report = generar_profiling_report(df_clean)
-        report_path = Path("reports") / f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
+        report_path = Path("reports") / "full" /f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(exist_ok=True)
         report.to_file(report_path)
 

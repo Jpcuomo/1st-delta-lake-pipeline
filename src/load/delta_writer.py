@@ -47,6 +47,7 @@ def leer_extraccion_reciente(path_bronce:str, path_incremental:str) -> pd.DataFr
         
         # Filtro para leer solo los registros
         df = dt.to_pandas(filters=[("id", ">", valor_previo)])
+        
         # Actualizo valor previo con el último valor
         valor_previo = contenido_incremental['ultimo_valor']
         

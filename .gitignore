@@ -1,4 +1,4 @@
-config/api_auth.conf
+
 __pycache__/
 *.pyc
 *.log
@@ -29,6 +29,9 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Config
+config/api_auth.conf
 
 # Virtual environments
 .env/
