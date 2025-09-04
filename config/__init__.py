@@ -1,9 +1,5 @@
-from .binance_klines_settings import (
-    BINANCE_KLINES
-    )
-
-from .binance_hist_trading_settings import (
-    CONTENIDO_INCREMENTAL, BINANCE_HIST_TRADES, DATA_PROCESING, FILE_FORMATS, NOMBRE_COLUMNAS_DESEADAS, CONVERSION_MAPPING
+from .settings import (
+    CONTENIDO_INCREMENTAL, DATA_PROCESING, FILE_FORMATS, NOMBRE_COLUMNAS_DESEADAS, CONVERSION_MAPPING, BINANCE_API, 
 )
 
 from .paths import (
@@ -48,10 +44,9 @@ __all__ = [
     'setup_logging',
     'COLS',
     'CONVERSION_MAPPING',
-    'BINANCE_KLINES',
-    'BINANCE_HIST_TRADES',
     'DATA_PROCESING',
     'FILE_FORMATS',
     'NOMBRE_COLUMNAS_DESEADAS',
-    'CONVERSION_MAPPING',    
+    'CONVERSION_MAPPING',   
+    'BINANCE_API' 
 ]

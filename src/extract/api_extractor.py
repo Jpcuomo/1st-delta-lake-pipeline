@@ -1,7 +1,9 @@
 import json
 import requests
-import pandas as pd
+import logging
 from src.utils.config_utils import obtener_archivo_incremental
+
+logger = logging.getLogger('pipeline')
 
 
 def get_data(base_url:str, endpoint:str, data_field:str=None, params:dict=None, headers:dict=None) -> dict | list | None:
@@ -22,18 +24,19 @@ def get_data(base_url:str, endpoint:str, data_field:str=None, params:dict=None, 
         endpoint_url = f"{base_url}/{endpoint}"
         response = requests.get(endpoint_url, params=params, headers=headers)
         response.raise_for_status()
-        print(f'Código de estado: {response.status_code}')
+        
+        logger.info(f'Código de estado: {response.status_code}. Petición aceptada!')
         
         try:
             data = response.json()
             if data_field:
                 data = data[data_field]
         except:
-            print("La respuesta no es un JSON válido")
+            logger.error("La respuesta no es un JSON válido")
             return None
         return data
     except requests.exceptions.RequestException as e:
-        print(f"La petición ha fallado. código de error: {e}")
+        logger.error(f"La petición ha fallado. código de error: {e}")
         
         
 def get_data_incremental(ruta_archivo_incremental: str, base_url: str, endpoint: str, params: dict = None, headers: dict = None) -> dict|None:
@@ -55,7 +58,7 @@ def get_data_incremental(ruta_archivo_incremental: str, base_url: str, endpoint:
     # Leer último ID guardado
     archivo_incremental = obtener_archivo_incremental(ruta_archivo_incremental)
     if not archivo_incremental or ('ultimo_valor' not in archivo_incremental and 'valor_previo' not in archivo_incremental):
-        print('Archivo incremental no creado o sin campo "ultimo_valor" o "valor_previo".')
+        logger.error('Archivo incremental no creado o sin campo "ultimo_valor" o "valor_previo".')
         return None
 
     ultimo_valor = archivo_incremental['ultimo_valor']
@@ -66,7 +69,7 @@ def get_data_incremental(ruta_archivo_incremental: str, base_url: str, endpoint:
 
     # Llamada a la API
     datos = get_data(base_url, endpoint, params=params, headers=headers)
-    print(f"Solicitando desde ID: {ultimo_valor + 1}")
+    logger.info(f"Solicitando desde ID: {ultimo_valor + 1}")
 
     # Filtrar solo IDs mayores al último valor
     nuevo_valor = max(dato['id'] for dato in datos)
@@ -75,6 +78,6 @@ def get_data_incremental(ruta_archivo_incremental: str, base_url: str, endpoint:
     with open(ruta_archivo_incremental, "w", encoding="utf-8") as f:
         json.dump({"valor_previo":valor_previo,"ultimo_valor": nuevo_valor}, f, indent=4, ensure_ascii=False)
 
-    print(f"Archivo incremental actualizado: {ultimo_valor} -> {nuevo_valor}")
+    logger.info(f"Archivo incremental actualizado: {ultimo_valor} -> {nuevo_valor}")
 
     return datos

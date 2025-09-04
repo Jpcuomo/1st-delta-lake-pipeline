@@ -1,5 +1,5 @@
 from config.paths import ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL
 from src.utils.config_utils import crear_archivo_incremental
-from config.binance_hist_trading_settings import CONTENIDO_INCREMENTAL
+from config.settings import CONTENIDO_INCREMENTAL
 
 crear_archivo_incremental(CONTENIDO_INCREMENTAL, ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL)
