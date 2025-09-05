@@ -37,6 +37,9 @@ if not os.path.exists(INCREMENTAL_DIR): # Esta línea evita que se reinicie a 0 
                                          CARPETA_INCREMENTAL)
 
 
+#----------------------------------------------
+# ORQUESTACION DEL PIPELINE
+#----------------------------------------------
 def run_incremental_pipeline():
     """Ejecuta el pipeline ETL completo"""
     try:
@@ -48,12 +51,13 @@ def run_incremental_pipeline():
         metricas = {'start_time':start_time}
         
         
-        #-----------------------------------------------------------------------------------------
+        #----------------------------------------------
+        # 1. EXTRACCION
+        #----------------------------------------------
         logger.info('Etapa 1: Extracción')        
         
         # Extracción de datos de la API
         df_raw = extr.extract_from_api()
-       
         
         # Guardo el DataFrame en formato Delta Lake
         # Como los campos nuevos son siempre distintos utilizo un MERGE sin UPDATE
@@ -73,7 +77,9 @@ def run_incremental_pipeline():
         logger.info(f"Filas extraidas desde id {metricas['min_id']} hasta id {metricas['max_id']}")
 
         
-        #-----------------------------------------------------------------------------------------
+        #----------------------------------------------
+        # 2. TRANSFORMACION
+        #----------------------------------------------
         logger.info('Etapa 2: Transformación')
             
         # Verificación de tipos de datos y espacio en memoria antes de iniciar transformaciones.
@@ -119,8 +125,12 @@ def run_incremental_pipeline():
         # Verificación de tipos de datos y espacio en memoria luego de iniciar transformaciones.
         memory_utils.mostrar_espacio_en_memoria_df(df_clean)
         
+        logger.info(f'Se limpiaron/ transformaron {len(df_clean)} registros')
         
-        # -----------------------------------------------------------------------------------------
+        
+        #----------------------------------------------
+        # 3. SUMARIZACION
+        #----------------------------------------------
         logger.info('Etapa 3: Sumarización')
         
         group_by_cols = ['date','hr','is_buyer_maker'] # Lista de columnas por las que agrupar
@@ -138,19 +148,24 @@ def run_incremental_pipeline():
             'quote_qty':'total_quote_qty',
             'id':'id_count'
         }
-
         
         # Asigna el DF sumarizado a un nuevo DF
         df_sumarizado = aggregations.sumarizar_df(df_clean, group_by_cols, agg_dict, rename_cols)
 
         # Redondeo para presentación
         cols = ['mean_price', 'qty_per_hour', 'total_quote_qty']
-        df_sumarizado[cols] = df_sumarizado[cols].round(3).map("{:.3f}".format)
+        
+        if not df_sumarizado.empty or None:
+            df_sumarizado[cols] = df_sumarizado[cols].round(3).map("{:.3f}".format)
+        else:
+            logger.error(f'Error al crear "df_sumarizado"')
 
         logger.debug(df_sumarizado.head().to_string())
         
         
-        # -----------------------------------------------------------------------------------------
+        #----------------------------------------------
+        # 4. CARGA
+        #----------------------------------------------
         logger.info('Etapa 4: Carga')
         
         # Guardo el DF en la capa silver, particionando por fecha y hora.
@@ -163,19 +178,22 @@ def run_incremental_pipeline():
         logger.info('Datos cargados en capa gold exitosamente.')
         
         
-        #-------------------------------------------------------------------------------------
+        #----------------------------------------------
         # 5. QUALITY CHECK
+        #----------------------------------------------
         logger.info("Etapa 5: Control de calidad")
-        from src.quality.profiling import generar_profiling_report
+        from src.quality import profiling
         
         BINANCE_HIST_TRADES = BINANCE_API['historical_trades']
-        report = generar_profiling_report(df_clean)
+        report = profiling.generar_profiling_report(df_clean)
         report_path = Path("reports") / "incremental" / f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(exist_ok=True)
         report.to_file(report_path)
 
-        # -----------------------------------------------------------------------------------------
-        # Métricas finales
+
+        #----------------------------------------------
+        # METRICAS FINALES
+        #----------------------------------------------
         end_time = datetime.now()
         metricas['end_time'] = end_time
         

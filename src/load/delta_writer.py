@@ -2,9 +2,13 @@ import os
 import json
 import pandas as pd
 import pyarrow as pa
+import logging
+
 from deltalake import write_deltalake, DeltaTable
 from deltalake.exceptions import TableNotFoundError
 from src.utils.config_utils import obtener_archivo_incremental
+
+logger = logging.getLogger('pipeline')
 
 
 def leer_delta_lake(path:str) -> pd.DataFrame|None:
@@ -22,7 +26,7 @@ def leer_delta_lake(path:str) -> pd.DataFrame|None:
     if os.path.exists(path):
         return DeltaTable(path).to_pandas()
     else:
-        print('El path al archivo no fue encontrado')
+        logger.info('El path al archivo no fue encontrado')
         return None
     
     
@@ -58,7 +62,8 @@ def leer_extraccion_reciente(path_bronce:str, path_incremental:str) -> pd.DataFr
         return df
     
     except Exception as e:
-        raise Exception(f'No se pudo procesar la tabla Delta Lake: {e}')
+        logger.info(f'No se pudo procesar la tabla Delta Lake: {e}')
+        raise
     
     
 def save_data_as_delta(df:pd.DataFrame, path:str, mode:str="overwrite", partition_cols:list|str=None) -> None:
@@ -86,21 +91,21 @@ def save_new_data_as_delta(new_data:pd.DataFrame, data_path:str, predicate:str, 
     asegurando que no se guarden registros duplicados.
 
     Args:
-      new_data (pd.DataFrame): Los datos que se desean guardar.
-      data_path (str): La ruta donde se guardará el dataframe en formato Delta Lake.
-      predicate (str): La condición de predicado para la operación MERGE.
-      partition_cols (list): Columnas sobre las que particionar
+        new_data (pd.DataFrame): Los datos que se desean guardar.
+        data_path (str): La ruta donde se guardará el dataframe en formato Delta Lake.
+        predicate (str): La condición de predicado para la operación MERGE.
+        partition_cols (list): Columnas sobre las que particionar
     """
     try:
-      dt = DeltaTable(data_path)
-      new_data_pa = pa.Table.from_pandas(new_data)
-      # Se insertan en target, datos de source que no existen en target
-      dt.merge(
-          source=new_data_pa,
-          source_alias="src",
-          target_alias="tgt",
-          predicate=predicate
-      ).when_not_matched_insert_all().execute()
-    # Si no existe la tabla Delta Lake, se guarda como nueva
+        dt = DeltaTable(data_path)
+        new_data_pa = pa.Table.from_pandas(new_data)
+        # Se insertan en target, datos de source que no existen en target
+        dt.merge(
+            source=new_data_pa,
+            source_alias="src",
+            target_alias="tgt",
+            predicate=predicate
+        ).when_not_matched_insert_all().execute()
+        # Si no existe la tabla Delta Lake, se guarda como nueva
     except TableNotFoundError:
-      save_data_as_delta(new_data, data_path, partition_cols=partition_cols)
+        save_data_as_delta(new_data, data_path, partition_cols=partition_cols)

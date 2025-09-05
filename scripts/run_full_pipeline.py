@@ -38,8 +38,9 @@ def run_full_pipeline():
         start_time = datetime.now()
         
         
-        #-------------------------------------------------------------------------------------
+        #---------------------------------------
         # 1. EXTRACCIÓN
+        #---------------------------------------
         logger.info("Etapa 1: Extracción")
         
         BINANCE_KLINES = BINANCE_API['klines']
@@ -52,10 +53,10 @@ def run_full_pipeline():
         logger.info(f"Extraídos {len(df_raw)} registros")
         
         
-        #-------------------------------------------------------------------------------------
+        #---------------------------------------
         # 2. TRANSFORMACIÓN
+        #---------------------------------------
         logger.info("Etapa 2: Transformación")
-        
         
         # Modificacion de columnas
         df_clean = data_transformation.renombrar_columnas(df_raw, COLS)
@@ -80,13 +81,13 @@ def run_full_pipeline():
         print(df_clean.head())
         
         
-        #-------------------------------------------------------------------------------------
+        #---------------------------------------
         # 3. SUMARIZACION
+        #---------------------------------------
         logger.info("Etapa 3: Sumarizacion")
         
         # Separo la columna open_time en year y month para agrupar
         df_clean[["year", "month"]] = df_clean["open_time"].apply(lambda x: pd.Series([x.year, x.month]))
-        
         
         # Sumarización de data frame
         by_col = ['year', 'month']
@@ -110,8 +111,9 @@ def run_full_pipeline():
         print(df_pivot.head())
         
         
-        #-------------------------------------------------------------------------------------
+        #---------------------------------------
         # 4. CARGA
+        #---------------------------------------
         logger.info("Etapa 4: Carga")
         
         
@@ -128,10 +130,10 @@ def run_full_pipeline():
         delta_writer.save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{BINANCE_KLINES['params']['symbol']}_pivot")
         
         
-        #-------------------------------------------------------------------------------------
+        #---------------------------------------
         # 5. QUALITY CHECK
+        #---------------------------------------
         logger.info("Etapa 5: Control de calidad")
-        
         
         report = profiling.generar_profiling_report(df_clean)
         report_path = Path("reports") / "full" /f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
@@ -139,8 +141,9 @@ def run_full_pipeline():
         report.to_file(report_path)
 
 
-        #-------------------------------------------------------------------------------------
+        #---------------------------------------
         # Métricas finales
+        #---------------------------------------
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
         
