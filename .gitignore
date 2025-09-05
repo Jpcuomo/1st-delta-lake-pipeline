@@ -33,7 +33,7 @@ MANIFEST
 config/api_auth.conf
 
 # Virtual environments
-.env/
+.env
 .venv/
 env/
 venv/
