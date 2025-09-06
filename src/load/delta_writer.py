@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import pyarrow as pa
 import logging
+from pathlib import Path
 
 from deltalake import write_deltalake, DeltaTable
 from deltalake.exceptions import TableNotFoundError
@@ -11,7 +12,7 @@ from src.utils.config_utils import obtener_archivo_incremental
 logger = logging.getLogger('pipeline')
 
 
-def leer_delta_lake(path:str) -> pd.DataFrame|None:
+def leer_delta_lake(path:Path) -> pd.DataFrame|None:
     '''
     Lee el archivo Delta Lake ubicado en la ruta del parámetro y lo
     transforma en un DataFrame de Pandas.
@@ -30,7 +31,7 @@ def leer_delta_lake(path:str) -> pd.DataFrame|None:
         return None
     
     
-def leer_extraccion_reciente(path_bronce:str, path_incremental:str) -> pd.DataFrame:
+def leer_extraccion_reciente(path_bronce:Path, path_incremental:Path) -> pd.DataFrame:
     '''
     Lee y devuelve únicamente los registros con id mayor al último valor 
     procesado desde el Delta Lake en la capa bronce.
@@ -66,7 +67,7 @@ def leer_extraccion_reciente(path_bronce:str, path_incremental:str) -> pd.DataFr
         raise
     
     
-def save_data_as_delta(df:pd.DataFrame, path:str, mode:str="overwrite", partition_cols:list|str=None) -> None:
+def save_data_as_delta(df:pd.DataFrame, path:Path, mode:str="overwrite", partition_cols:list|str=None) -> None:
     """
     Guarda un dataframe en formato Delta Lake en la ruta especificada.
     A su vez, es capaz de particionar el dataframe por una o varias columnas.
@@ -84,7 +85,7 @@ def save_data_as_delta(df:pd.DataFrame, path:str, mode:str="overwrite", partitio
     write_deltalake(path, df, mode=mode, partition_by=partition_cols)
     
     
-def save_new_data_as_delta(new_data:pd.DataFrame, data_path:str, predicate:str, partition_cols:list|str=None) -> None:
+def save_new_data_as_delta(new_data:pd.DataFrame, data_path:Path, predicate:str, partition_cols:list|str=None) -> None:
     """
     Guarda solo nuevos datos en formato Delta Lake usando la operación MERGE,
     comparando los datos ya cargados con los datos que se desean almacenar

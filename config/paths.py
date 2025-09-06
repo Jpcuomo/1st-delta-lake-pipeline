@@ -18,6 +18,20 @@ CARPETA_INCREMENTAL = INCREMENTAL_DIR.parent
 ARCHIVO_INCREMENTAL = INCREMENTAL_DIR.name
 
 #----------------------------------------------
+# Logs
+#----------------------------------------------
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_INCREMENTAL = LOGS_DIR / 'incremental'
+LOGS_FULL = LOGS_DIR / 'full'
+
+#----------------------------------------------
+# Reportes
+#----------------------------------------------
+REPORTS_DIR = BASE_DIR / 'reports'
+REPORTS_INCREMENTAL = REPORTS_DIR / 'incremental'
+REPORTS_FULL = REPORTS_DIR / 'full'
+
+#----------------------------------------------
 # Capa Bronze - Datos crudos
 #----------------------------------------------
 BRONZE_DIR = BASE_DIR / "data" / "bronze"
@@ -38,21 +52,3 @@ GOLD_DIR = BASE_DIR / "data" / "gold"
 PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL = GOLD_DIR / "api_binance" / "historicalTrades" / "summarized_table" 
 PATH_GOLD_SUMMARIZED_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "summarized_table" 
 PATH_GOLD_PIVOT_TABLE_FULL = GOLD_DIR / "api_binance" / "klines" / "pivot_table" 
-
-#----------------------------------------------
-# Crear directorios si no existen
-#----------------------------------------------
-for path in [
-    BRONZE_DIR, 
-    CARPETA_INCREMENTAL,
-    SILVER_DIR, 
-    GOLD_DIR,
-    PATH_BRONZE_DELTALAKE_FULL, 
-    PATH_BRONZE_DELTALAKE_INCREMENTAL,
-    PATH_SILVER_DELTALAKE_FULL, 
-    PATH_SILVER_DELTALAKE_INCREMENTAL,
-    PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL, 
-    PATH_GOLD_SUMMARIZED_TABLE_FULL,
-    PATH_GOLD_PIVOT_TABLE_FULL
-]:
-    path.mkdir(parents=True, exist_ok=True)

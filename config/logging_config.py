@@ -5,13 +5,16 @@ from datetime import datetime
 
 def setup_logging(tipo_extraccion:str, level:int=logging.INFO) -> None:
     """Configuración centralizada de logging"""
-    Path(f'logs/{tipo_extraccion}').mkdir(exist_ok=True)
+    
+    base_dir = Path(__file__).resolve().parent.parent
+    log_dir = base_dir / 'logs' / tipo_extraccion
+    log_dir.mkdir(parents=True, exist_ok=True)
     
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(f"logs/{tipo_extraccion}/pipeline_{datetime.now().strftime('%Y%m%d')}.log"),
+            logging.FileHandler(log_dir / f"pipeline_{datetime.now().strftime('%Y%m%d')}.log"),
             logging.StreamHandler()
         ]
     )

@@ -6,27 +6,32 @@ Ejecuta: extracción -> transformación -> carga
 
 import logging
 import pandas as pd
+import sys
 from datetime import datetime
 from pathlib import Path
 from config import logging_config
 
+# Configuracion de paths para importaciones
+root_path = Path(__file__).resolve().parent.parent
+if str(root_path) not in sys.path:
+    sys.path.insert(0, str(root_path))
+    
 from config.settings import (BINANCE_API, 
                              NOMBRE_COLUMNAS_DESEADAS_KL, 
                              CONVERSION_MAPPING_KL)
 from config.paths import (PATH_BRONZE_DELTALAKE_FULL, 
                           PATH_SILVER_DELTALAKE_FULL, 
                           PATH_GOLD_SUMMARIZED_TABLE_FULL, 
-                          PATH_GOLD_PIVOT_TABLE_FULL)
+                          PATH_GOLD_PIVOT_TABLE_FULL,
+                          REPORTS_FULL)
 from src.utils import helpers, memory_utils
 from src.extract import api_extractor, data_loader
 from src.transform import data_cleaning, data_transformation, aggregations
 from src.load import delta_writer
 from src.quality import profiling
 
-# Configuracion de paths para importaciones
-helpers.setup_paths()
 
-# Configuración de logging
+# Configuración de logging y creación de carpeta de logs
 logging_config.setup_logging('full')
 
 logger = logging.getLogger("pipeline")
@@ -137,8 +142,8 @@ def run_full_pipeline():
         logger.info("Etapa 5: Control de calidad")
         
         report = profiling.generar_profiling_report(df_clean)
-        report_path = Path("reports") / "full" /f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
-        report_path.parent.mkdir(exist_ok=True)
+        report_path = REPORTS_FULL /f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
         report.to_file(report_path)
 
 

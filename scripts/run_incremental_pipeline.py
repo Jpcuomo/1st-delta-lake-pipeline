@@ -6,9 +6,15 @@ Realiza extracción -> transformación -> carga -> quality testing
 
 import os
 import logging
+import sys
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+
+# Configuracion de paths para importaciones
+root_path = Path(__file__).resolve().parent.parent
+if str(root_path) not in sys.path:
+    sys.path.insert(0, str(root_path))
 
 from config.settings import (CONTENIDO_INCREMENTAL, 
                             NOMBRE_COLUMNAS_DESEADAS_HT, 
@@ -19,7 +25,8 @@ from config.paths import (ARCHIVO_INCREMENTAL,
                           INCREMENTAL_DIR, 
                           PATH_BRONZE_DELTALAKE_INCREMENTAL, 
                           PATH_SILVER_DELTALAKE_INCREMENTAL, 
-                          PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL)
+                          PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL,
+                          REPORTS_INCREMENTAL)
 from config.logging_config import setup_logging
 from src.utils import helpers, file_utils, memory_utils
 from src.extract import incremental_extraction as extr
@@ -27,10 +34,7 @@ from src.transform import data_cleaning as clean, data_transformation as dtrans,
 from src.load import delta_writer
 
 
-# Configuracion de paths para importaciones
-helpers.setup_paths()
-
-# Configuracion de logging
+# Configuración de logging y creación de carpeta de logs
 setup_logging('incremental')
 logger = logging.getLogger('pipeline')
 
@@ -53,7 +57,7 @@ def run_incremental_pipeline():
         # Inicia conteo del tiempo de ejecución
         start_time = datetime.now()
         metricas = {'start_time':start_time}
-        
+
         
         #----------------------------------------------
         # 1. EXTRACCION
@@ -191,8 +195,8 @@ def run_incremental_pipeline():
         from src.quality import profiling
         
         report = profiling.generar_profiling_report(df_clean)
-        report_path = Path("reports") / "incremental" / f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
-        report_path.parent.mkdir(exist_ok=True)
+        report_path = REPORTS_INCREMENTAL / f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
         report.to_file(report_path)
 
 
