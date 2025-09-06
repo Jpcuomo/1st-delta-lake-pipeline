@@ -1,3 +1,7 @@
+#-------------------------------------------------------------------------
+# Archivo para pruebas de código
+#-------------------------------------------------------------------------
+
 from pathlib import Path
 from config.paths import PATH_BRONZE_DELTALAKE_INCREMENTAL
 import pandas as pd

@@ -1,5 +1,5 @@
 """
-Project settings and constants for Binance API pipeline.
+Constantes y seteos para el proyecto pipeline ETL/ELT de Binance API.
 """
 
 import os
@@ -49,7 +49,8 @@ def datetime_to_millis(dt: datetime) -> int:
     
 
 #---------------------------------------------------------
-# Inicialización de archivo incremental
+# Inicialización del archivo incremental (metadata)
+# (para API Historical_trades)
 #---------------------------------------------------------
 CONTENIDO_INCREMENTAL = {'valor_previo':0,'ultimo_valor':0}
 
@@ -71,6 +72,10 @@ KLINES_START_TIME = get_env_datetime('KLINES_START_TIME', datetime(2024, 7, 31, 
 KLINES_END_TIME = get_env_datetime('KLINES_END_TIME', datetime(2025, 7, 31, 23, 59, 59))
 KLINES_LIMIT = get_env_int('KLINES_LIMIT', 1000)
 
+
+#---------------------------------------------------------
+# Diccionario 
+#---------------------------------------------------------
 BASE_URL = 'https://api.binance.com/api/v3'
 
 BINANCE_API = {
@@ -83,7 +88,8 @@ BINANCE_API = {
             'fromId':FROM_ID
             },
         'headers':{'X-MBX-APIKEY':BINANCE_API_KEY},
-        'batch_qtty':BATCH_QTTY
+        'batch_qtty':BATCH_QTTY,
+        'partition_cols':['date','hr']
     },
     'klines': { # Endpoint klines
         'base_url':BASE_URL,
@@ -100,30 +106,59 @@ BINANCE_API = {
 }
 
 #---------------------------------------------------------
-
+# Parámetros y settings para API Binance/Historical_trades
 #---------------------------------------------------------
-NOMBRE_COLUMNAS_DESEADAS = {
+NOMBRE_COLUMNAS_DESEADAS_HT = {
     'time': 'miliseconds',
     'qty': 'quantity',
     'quoteQty': 'quote_qty',
     'isBuyerMaker': 'is_buyer_maker'
 }
 
-CONVERSION_MAPPING = {
+CONVERSION_MAPPING_HT = {
     'price':'float32',
     'quantity':'float32',
     'quote_qty':'float32'
 }
 
 
-# Data Processing
-DATA_PROCESING = {
-    'default_partition_cols':['date'],
-    'max_retires':3,
-    'retry_delay':5 # seconds
-}
+#---------------------------------------------------------
+# Parámetros y settings para API Binance/Klines
+#---------------------------------------------------------
 
-# File Formats
+# Diccionario para renombrar columnas con nombres deseados
+NOMBRE_COLUMNAS_DESEADAS_KL = {
+    0:"open_time",
+    1:"open",
+    2:"high",
+    3:"low",
+    4:"close",
+    5:"volume",
+    6:"close_time",
+    7:"quote_asset_volume",
+    8:"num_trades",
+    9:"tb_base_asset_volume",
+    10:"tb_quote_asset_volume",
+    11:"ignore"}
+
+# Mapeo de columnas para conversion de tipo de dato
+CONVERSION_MAPPING_KL = {
+    "open":"float32",
+    "high":"float32",
+    "low":"float32",
+    "close":"float32",
+    "volume":"float32",
+    "quote_asset_volume":"float64",
+    "num_trades":"int32",
+    "tb_base_asset_volume":"float32",
+    "tb_quote_asset_volume":"float64"
+    }
+
+
+#---------------------------------------------------------
+# Otros settings generales
+#---------------------------------------------------------
+# Formato de archivos
 FILE_FORMATS = {
     'delta_format':'delta',
     'parquet_format':'parquet',

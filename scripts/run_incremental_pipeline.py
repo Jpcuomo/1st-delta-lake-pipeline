@@ -11,10 +11,14 @@ from pathlib import Path
 from datetime import datetime
 
 from config.settings import (CONTENIDO_INCREMENTAL, 
-                                                  NOMBRE_COLUMNAS_DESEADAS, 
-                                                  CONVERSION_MAPPING, BINANCE_API)
-from config.paths import (ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL, INCREMENTAL_DIR, 
-                          PATH_BRONZE_DELTALAKE_INCREMENTAL, PATH_SILVER_DELTALAKE_INCREMENTAL, 
+                            NOMBRE_COLUMNAS_DESEADAS_HT, 
+                            CONVERSION_MAPPING_HT, 
+                            BINANCE_API)
+from config.paths import (ARCHIVO_INCREMENTAL, 
+                          CARPETA_INCREMENTAL, 
+                          INCREMENTAL_DIR, 
+                          PATH_BRONZE_DELTALAKE_INCREMENTAL, 
+                          PATH_SILVER_DELTALAKE_INCREMENTAL, 
                           PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL)
 from config.logging_config import setup_logging
 from src.utils import helpers, file_utils, memory_utils
@@ -97,7 +101,7 @@ def run_incremental_pipeline():
         print(f'Cantidad de filas: {df_clean.shape[0]}')
         
         # Renombro columnas
-        df_clean = dtrans.renombrar_columnas(df_clean, NOMBRE_COLUMNAS_DESEADAS)
+        df_clean = dtrans.renombrar_columnas(df_clean, NOMBRE_COLUMNAS_DESEADAS_HT)
         
         # Convierto los 'milisegundos' a datetime y los asigno a la columna auxiliar 'time'
         df_clean['time'] = dtrans.convertir_milisegundos_a_datetime(df_clean, ['miliseconds'])
@@ -116,7 +120,7 @@ def run_incremental_pipeline():
         df_clean = df_clean.drop(columns=['time','isBestMatch'])
         
         # Casteo de datos numéricos tipo object a float32 para hacer agregaciones futuras
-        df_clean = dtrans.castear_tipos_de_dato(df_clean, CONVERSION_MAPPING)
+        df_clean = dtrans.castear_tipos_de_dato(df_clean, CONVERSION_MAPPING_HT)
         
         # Cambio la posición de las columnas para presentar de forma más prolija
         df_clean = dtrans.cambiar_posicion_de_columna(df_clean, 'date', 'is_buyer_maker')
@@ -169,7 +173,9 @@ def run_incremental_pipeline():
         logger.info('Etapa 4: Carga')
         
         # Guardo el DF en la capa silver, particionando por fecha y hora.
-        delta_writer.save_new_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_INCREMENTAL, 'src.id = tgt.id', ['date','hr'])
+        BINANCE_HIST_TRADES = BINANCE_API['historical_trades']
+        delta_writer.save_new_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_INCREMENTAL, 
+                                            'src.id = tgt.id', BINANCE_HIST_TRADES['partition_cols'])
         logger.info('Datos cargados en capa silver exitosamente.')
         
         # Guardado del DF en formato Delta Lake, en modo 'overwrite' por defecto
@@ -184,7 +190,6 @@ def run_incremental_pipeline():
         logger.info("Etapa 5: Control de calidad")
         from src.quality import profiling
         
-        BINANCE_HIST_TRADES = BINANCE_API['historical_trades']
         report = profiling.generar_profiling_report(df_clean)
         report_path = Path("reports") / "incremental" / f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(exist_ok=True)

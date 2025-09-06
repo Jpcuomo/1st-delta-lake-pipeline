@@ -10,8 +10,9 @@ from datetime import datetime
 from pathlib import Path
 from config import logging_config
 
-from config.settings import BINANCE_API
-from config.constants import COLS, CONVERSION_MAPPING
+from config.settings import (BINANCE_API, 
+                             NOMBRE_COLUMNAS_DESEADAS_KL, 
+                             CONVERSION_MAPPING_KL)
 from config.paths import (PATH_BRONZE_DELTALAKE_FULL, 
                           PATH_SILVER_DELTALAKE_FULL, 
                           PATH_GOLD_SUMMARIZED_TABLE_FULL, 
@@ -59,7 +60,7 @@ def run_full_pipeline():
         logger.info("Etapa 2: Transformación")
         
         # Modificacion de columnas
-        df_clean = data_transformation.renombrar_columnas(df_raw, COLS)
+        df_clean = data_transformation.renombrar_columnas(df_raw, NOMBRE_COLUMNAS_DESEADAS_KL)
         print(df_clean.head())
         df_clean = data_cleaning.eliminar_columnas(df_clean, ['ignore'])
         
@@ -72,7 +73,7 @@ def run_full_pipeline():
         
         # Casteo de tipos de dato
         df_clean[['open_time', 'close_time']] = data_transformation.convertir_milisegundos_a_datetime(df_clean, ['open_time', 'close_time'])
-        df_clean = data_transformation.castear_tipos_de_dato(df_clean, CONVERSION_MAPPING)
+        df_clean = data_transformation.castear_tipos_de_dato(df_clean, CONVERSION_MAPPING_KL)
         
         # Verifico tipos de datos y espacio en memoria
         memory_utils.mostrar_espacio_en_memoria_df(df_clean)

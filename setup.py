@@ -9,5 +9,6 @@ setup(
         "pandas>=1.5.0",
         "deltalake>=0.10.0",
         "ydata-profiling>=4.0.0",
-    ]
+    ],
+    maintainer='Juan Pablo Cuomo'
 )
