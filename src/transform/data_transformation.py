@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import logging
 
 
 def ordenar_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd.DataFrame:
@@ -18,29 +19,42 @@ def ordenar_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) ->
     return df.sort_values(by=sort_by, ascending=ascending)
 
 
+import pandas as pd
+import logging
+
 def renombrar_columnas(df: pd.DataFrame, columnas_dict: dict) -> pd.DataFrame:
-    '''
-    Renombra columnas funcionando con ambos formatos (string e integer)
-    '''
-    # Verificar qué formato tienen las columnas actuales
-    current_columns = list(df.columns)
+    """
+    Renombra columnas de un DataFrame según un diccionario.
+
+    Args:
+        df (pd.DataFrame): DataFrame de entrada
+        columnas_dict (dict): Diccionario {columna_original: columna_nueva}
+
+    Returns:
+        pd.DataFrame: DataFrame con columnas renombradas
+    """
+    logger = logging.getLogger('data_transformations')
+
+    if not isinstance(columnas_dict, dict):
+        logger.error("Error: el parámetro debe ser un diccionario")
+        raise TypeError("El parámetro 'columnas_dict' debe ser un diccionario")
     
-    # Si las columnas son integers, convertir el diccionario
-    if all(isinstance(col, (int, np.integer)) for col in current_columns): 
-        columnas_int = {int(k): v for k, v in columnas_dict.items()}
-        return df.rename(columns=columnas_int)
-    
-    # Si las columnas son strings, usar el diccionario tal cual
-    elif all(isinstance(col, str) for col in current_columns):
+    if not columnas_dict:
+        logger.error("Error: el diccionario no puede ser vacío")
+        raise ValueError("El diccionario no puede ser vacío")
+
+    columnas_actuales = list(df.columns)
+    faltantes = [c for c in columnas_dict.keys() if c not in columnas_actuales]
+
+    for col in faltantes:
+        logger.warning(f"La columna '{col}' no existe en el DataFrame. No se aplicará el renombrado.")
+
+    try:
         return df.rename(columns=columnas_dict)
-    
-    else:
-        try:
-            columnas_int = {int(k): v for k, v in columnas_dict.items()}
-            return df.rename(columns=columnas_int)
-        except:
-            return df.rename(columns=columnas_dict)
-    
+    except Exception as e:
+        logger.error(f"Error al renombrar columnas: {e}")
+        raise
+
     
 def castear_tipos_de_dato(df: pd.DataFrame, conversion_mapping: dict) -> pd.DataFrame:
     """
