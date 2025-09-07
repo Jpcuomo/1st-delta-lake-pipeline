@@ -1,16 +1,12 @@
 # **Pipeline ETL - Datos de Binance con Delta Lake**
 
 ## Descripción
-Este proyecto muestra cómo diseñar y orquestar un pipeline ETL moderno con Python y Delta Lake para datos financieros en tiempo real. 
-``API Binance → Bronze → Silver → Gold → Reportes/Tests``
-```mermaid
-flowchart TD
-    A[API Binance] --> B[Bronze Layer]
-    B --> C[Silver Layer]
-    C --> D[Gold Layer]
-    D --> E[Reportes]
-```
+Este proyecto implementa un pipeline de ingeniería de datos que extrae información financiera de la API de Binance, la procesa con Python + Pandas y la almacena en formato Delta Lake.
+
 Implementé una arquitectura de data lake organizada en tres capas (bronze, silver, gold) para gestionar los datos en diferentes estados de procesamiento.
+
+![imagen](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/api_binance_flow.drawio.svg)
+
 
 ## Funcionalidades principales
 ## Extracción de datos
@@ -40,7 +36,6 @@ data/
 ├── silver/ # Datos limpios y transformados
 └── gold/ # Datos agregados para análisis
 ```
-
 
 ## Configuración e Instalación
 
@@ -84,6 +79,9 @@ Editar config/settings.py según necesidad
 - Requests para consumir la API de Binance
 - Logging para tracking de ejecuciones
 - ydata-profiling para control de calidad
+
+### Muestra de YData-Profiling
+![imagen](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/YData2.png)
 
 ## Estructura del Proyecto
 ```
