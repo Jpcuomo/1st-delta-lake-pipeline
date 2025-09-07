@@ -83,12 +83,12 @@ python -m venv venv
 ```
 
 ```bash
-source venv/bin/activate
-```   # Linux/Mac
+source venv/bin/activate   # Linux/Mac
+```   
 
 ```bash
-venv\Scripts\activate
-```   # Windows
+venv\Scripts\activate   # Windows
+```   
 
 ### 2. Instalar dependencias
 ```bash
@@ -102,8 +102,8 @@ pip install -e .
 
 ### 4. Configurar variables (opcional)
 ```bash
-config/settings.py
-```   # Editar según necesidad
+config/settings.py   # Editar según necesidad
+```   
 
 ### 5. Ejecución
 ### 5.1. Pipeline Completo (Full Load)
