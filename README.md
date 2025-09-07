@@ -1,4 +1,4 @@
-# Pipeline ETL - Datos de Binance con Delta Lake
+# **Pipeline ETL - Datos de Binance con Delta Lake**
 
 ## Descripción
 Este es un pipeline completo de ingeniería de datos que extrae información financiera de la API de Binance, la procesa y la almacena en formato Delta Lake. Implementé una arquitectura de data lake organizada en tres capas (bronze, silver, gold) para gestionar los datos en diferentes estados de procesamiento.
@@ -24,10 +24,13 @@ Este es un pipeline completo de ingeniería de datos que extrae información fin
 - Metadatos y logs de ejecución
 
 ## Estructura del Data Lake
+
+```
 data/
 ├── bronze/ # Datos crudos de la API
 ├── silver/ # Datos limpios y transformados
 └── gold/ # Datos agregados para análisis
+```
 
 
 ## Configuración e Instalación
@@ -38,63 +41,43 @@ data/
 - Acceso a internet para conectar con la API de Binance
 
 ### 1. Crear y activar entorno virtual
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+``python -m venv venv``
+``source venv/bin/activate``  # Linux/Mac
+``venv\Scripts\activate``     # Windows
 
 ### 2. Instalar dependencias
-pip install -r requirements.txt
+``pip install -r requirements.txt``
 
 ### 3. Instalar paquetes
-pip install -e .
+``pip install -e .``
 
 ### 4. Configurar variables (opcional)
 Editar config/settings.py según necesidad
 
-## 5. Ejecución
+### 5. Ejecución
 ### 5.1. Pipeline Completo (Full Load)
-python scripts/run_full_pipeline.py
+``python scripts/run_full_pipeline.py``
 
 ### 5.2. Pipeline Incremental
-python scripts/run_incremental_pipeline.py
+``python scripts/run_incremental_pipeline.py``
 
 ## Transformaciones Implementadas
-1- Limpieza de datos: Eliminación de duplicados y valores nulos
-
-2- Conversión de tipos: Formateo de fechas y tipos de datos
-
-3- Renombrado de columnas: Normalización de nombres
-
-4- Agregaciones: Group by con funciones de agregación
-
-5- Creación de columnas: Nuevas métricas derivadas
-
-6- Particionamiento: Por fecha y hora para optimización
+- Limpieza de datos: Eliminación de duplicados y valores nulos
+- Conversión de tipos: Formateo de fechas y tipos de datos
+- Renombrado de columnas: Normalización de nombres
+- Agregaciones: Group by con funciones de agregación
+- Creación de columnas: Nuevas métricas derivadas
+- Particionamiento: Por fecha y hora para optimización
 
 ## Tecnologías Utilizadas
 - Python + Pandas para procesamiento
-
 - Delta Lake para almacenamiento eficiente
-
 - Requests para consumir la API de Binance
-
 - Logging para tracking de ejecuciones
-
 - ydata-profiling para control de calidad
 
 ## Estructura del Proyecto
-- src/extract/ - Extracción de datos de API
-
-- src/transform/ - Transformaciones con Pandas
-
-- src/load/ - Carga a Delta Lake
-
-- src/quality/ - Control de calidad y profiling
-
-- config/ - Configuración y settings
-
-- notebooks/ - Exploración y prototipos
-
+```
 delta_lake_bucket/
 ├── config/           # Configuración y settings
 ├── data/            # Datos en formato Delta Lake
@@ -109,12 +92,9 @@ delta_lake_bucket/
 │   ├── load/        # Carga a Delta
 │   └── utils/       # Utilidades
 └── tests/          # Tests automatizados
-
-## Notas importantes
+```
+## Notas:
 - Los datos se almacenan localmente en formato Delta Lake
-
 - Las ejecuciones incrementales evitan reprocesar datos existentes
-
 - Los reportes de calidad ayudan a identificar problemas en los datos
-
 - El código está modularizado para mejor mantenimiento
