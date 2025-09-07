@@ -75,6 +75,7 @@ def test_renombrar_columnas():
         f'Error: fallo en convertir int -> int' 
         
     # Test 5: Excepción por diccionario vacío
+def test_diccionario_vacio():
     df = pd.DataFrame([{'col1':1}])
     with pytest.raises(TypeError):
         dt.renombrar_columnas(df, {})

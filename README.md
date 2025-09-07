@@ -25,6 +25,15 @@ flowchart LR
 - Soporte para extracción completa (full load) e incremental
 - Manejo de errores y reintentos automáticos
 
+### Muestra de test unitarios
+```python
+    # Test 5: Excepción por diccionario vacío
+def test_diccionario_vacio():
+    df = pd.DataFrame([{'col1':1}])
+    with pytest.raises(TypeError):
+        dt.renombrar_columnas(df, {})
+```
+
 ### Datos crudos
 
 ![crudos](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/crudos.png)
