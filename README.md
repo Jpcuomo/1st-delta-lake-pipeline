@@ -59,7 +59,7 @@ def test_diccionario_vacio():
 - Datos enriquecidos en capa gold
 - Metadatos y logs de ejecución
 
-```
+```bash
 data/
 ├── bronze/ # Datos crudos de la API
 ├── silver/ # Datos limpios y transformados
@@ -78,27 +78,47 @@ data/
 - Acceso a internet para conectar con la API de Binance
 
 ### 1. Crear y activar entorno virtual
-``python -m venv venv``
+```bash
+python -m venv venv
+```
 
-``source venv/bin/activate``  # Linux/Mac
+```bash
+source venv/bin/activate
+```   
+Linux/Mac
 
-``venv\Scripts\activate``     # Windows
+```bash
+venv\Scripts\activate
+```     
+Windows
 
 ### 2. Instalar dependencias
-``pip install -r requirements.txt``
+```bash
+pip install -r requirements.txt
+```
 
 ### 3. Instalar paquetes
-``pip install -e .``
+```bash
+pip install -e .
+```
 
 ### 4. Configurar variables (opcional)
-Editar ``config/settings.py`` según necesidad
+Editar 
+```bash
+config/settings.py
+``` 
+según necesidad
 
 ### 5. Ejecución
 ### 5.1. Pipeline Completo (Full Load)
-``python scripts/run_full_pipeline.py``
+```bash
+python scripts/run_full_pipeline.py
+```
 
 ### 5.2. Pipeline Incremental
-``python scripts/run_incremental_pipeline.py``
+```bash
+python scripts/run_incremental_pipeline.py
+```
 
 ## Transformaciones Implementadas
 - Limpieza de datos: Eliminación de duplicados y valores nulos
@@ -120,7 +140,7 @@ Editar ``config/settings.py`` según necesidad
 
 ## Estructura del Proyecto
 
-```
+```bash
 delta_lake_bucket/
 ├── README.md
 ├── config/           # Configuración y settings
@@ -183,7 +203,7 @@ delta_lake_bucket/
 - Orquestación con Airflow/Prefect
 - Despliegue en cloud (AWS S3 + Databricks)
 - Automatización con CI/CD
-- Caontainerización con Docker
+- Containerización con Docker
 
 ## Comentarios finales:
 
