@@ -1,17 +1,16 @@
 """
 Path configuration for Binance API data pipeline.
-Usa pathlib para mejor manejo de rutas entre sistemas.
+Use 'pathlib' for better path management between systems.
 """
-
 from pathlib import Path
 
 #----------------------------------------------
-# Directorio base del proyecto
+# Base project dir
 #----------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 #----------------------------------------------
-# Metadatos
+# Metadata
 #----------------------------------------------
 INCREMENTAL_DIR = Path("metadata") / "incremental.json"
 CARPETA_INCREMENTAL = INCREMENTAL_DIR.parent
@@ -25,28 +24,28 @@ LOGS_INCREMENTAL = LOGS_DIR / 'incremental'
 LOGS_FULL = LOGS_DIR / 'full'
 
 #----------------------------------------------
-# Reportes
+# Reports
 #----------------------------------------------
 REPORTS_DIR = BASE_DIR / 'reports'
 REPORTS_INCREMENTAL = REPORTS_DIR / 'incremental'
 REPORTS_FULL = REPORTS_DIR / 'full'
 
 #----------------------------------------------
-# Capa Bronze - Datos crudos
+# Bronze Layer - Raw Data
 #----------------------------------------------
 BRONZE_DIR = BASE_DIR / "data" / "bronze"
 PATH_BRONZE_DELTALAKE_FULL = BRONZE_DIR / "api_binance" / "klines" 
 PATH_BRONZE_DELTALAKE_INCREMENTAL = BRONZE_DIR / "api_binance" / "historicalTrades" 
 
 #----------------------------------------------
-# Capa Silver - Datos limpios
+# Silver Layer - Clean Data
 #----------------------------------------------
 SILVER_DIR = BASE_DIR / "data" / "silver"
 PATH_SILVER_DELTALAKE_FULL = SILVER_DIR / "api_binance" / "klines" 
 PATH_SILVER_DELTALAKE_INCREMENTAL = SILVER_DIR / "api_binance" / "historicalTrades" 
 
 #----------------------------------------------
-# Capa Gold - Datos enriquecidos
+# Gold Layer - Enriched Data
 #----------------------------------------------
 GOLD_DIR = BASE_DIR / "data" / "gold"
 PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL = GOLD_DIR / "api_binance" / "historicalTrades" / "summarized_table" 
