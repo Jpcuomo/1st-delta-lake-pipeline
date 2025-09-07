@@ -25,12 +25,24 @@ flowchart LR
 - Soporte para extracción completa (full load) e incremental
 - Manejo de errores y reintentos automáticos
 
+### Datos crudos
+
+![crudos](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/crudos.png)
+
 ## Procesamiento con Pandas
 - Limpieza de datos: eliminación de duplicados y valores nulos
 - Transformación de tipos de datos y formatos
 - Creación de nuevas columnas y métricas
 - Agregaciones, group by y creación de métricas
 - Particionamiento por fecha y hora para optimización
+
+### Datos procesados
+
+![limpios](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/limpios.png)
+
+### Datos sumarizados
+
+![sumarizados](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/sumarizacion.png)
 
 ## Almacenamiento Delta Lake
 - Datos crudos en capa bronze
@@ -46,7 +58,8 @@ data/
 ```
 
 ### Ejemplo de log de ejecución
-
+![logs1](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/log1.png)
+![logs2](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/logs2.png)
 
 ## Configuración e Instalación
 
@@ -134,6 +147,12 @@ delta_lake_bucket/
 - **Reducción del 70%** en tiempo de procesamiento
 - **Reportes automáticos** de calidad de datos
 - **Arquitectura escalable** para nuevos endpoints
+
+### Espacio en memoria antes del procesamiento
+![mem1](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/memoria1.png)
+
+### Espacio en memoria luego del procesamiento
+![mem2](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/memory2.png)
 
 ## Habilidades Demostradas
 
