@@ -76,6 +76,7 @@ def run_incremental_pipeline():
         
         # Traigo solo los valores de la última extracción para el procesamiento
         df_raw = delta_writer.leer_extraccion_reciente(PATH_BRONZE_DELTALAKE_INCREMENTAL, INCREMENTAL_DIR)
+        print(df_raw.head())
         
         metricas['filas_extraidas'] = len(df_raw)
         min_id = df_raw['id'].min()
@@ -131,6 +132,7 @@ def run_incremental_pipeline():
         # Cambio la posición de las columnas para presentar de forma más prolija
         df_clean = dtrans.cambiar_posicion_de_columna(df_clean, 'date', 'is_buyer_maker')
         df_clean = dtrans.cambiar_posicion_de_columna(df_clean, 'hour', 'is_buyer_maker')
+        print(df_clean.head())
         
         # Verificación de tipos de datos y espacio en memoria luego de iniciar transformaciones.
         memory_utils.mostrar_espacio_en_memoria_df(df_clean)
@@ -170,6 +172,8 @@ def run_incremental_pipeline():
         else:
             logger.error(f'Error al crear "df_sumarizado"')
 
+        print(df_sumarizado.head())
+        
         logger.debug(df_sumarizado.head().to_string())
         
         

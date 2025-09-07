@@ -1,16 +1,13 @@
-# **Pipeline ETL - Datos de Binance con Delta Lake**
+# **Data Engineering Project: Binance ETL Pipeline with Delta Lake (Medallion Architecture)**
 
 ## Descripción
 Este proyecto implementa un pipeline de ingeniería de datos que extrae información financiera de la API de Binance, la procesa con Python + Pandas y la almacena en formato Delta Lake.
 
+Implementé una arquitectura de data lake organizada en tres capas (bronze, silver, gold) para gestionar los datos en diferentes estados de procesamiento.
+
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![Pandas](https://img.shields.io/badge/Pandas-Data_Processing-green)
 ![Delta Lake](https://img.shields.io/badge/Delta_Lake-Storage-orange)
-
-Implementé una arquitectura de data lake organizada en tres capas (bronze, silver, gold) para gestionar los datos en diferentes estados de procesamiento.
-
-![imagen](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/api_binance_flow.drawio.svg)
-
 
 ```mermaid
 flowchart LR
@@ -21,20 +18,19 @@ flowchart LR
     D --> F[✅ Tests]
 ```
 
-
 ## Funcionalidades principales
 ## Extracción de datos
 - Conexión con múltiples endpoints de la API de Binance
 - Datos temporales (klines) que se actualizan regularmente
-- Soporte para extracción completa e incremental
+- Soporte para extracción completa (full load) e incremental
 - Manejo de errores y reintentos automáticos
 
 ## Procesamiento con Pandas
 - Limpieza de datos: eliminación de duplicados y valores nulos
 - Transformación de tipos de datos y formatos
 - Creación de nuevas columnas y métricas
-- Agregaciones y análisis de datos
-- Particionamiento por fecha y hora
+- Agregaciones, group by y creación de métricas
+- Particionamiento por fecha y hora para optimización
 
 ## Almacenamiento Delta Lake
 - Datos crudos en capa bronze
@@ -42,14 +38,15 @@ flowchart LR
 - Datos enriquecidos en capa gold
 - Metadatos y logs de ejecución
 
-## Estructura del Data Lake
-
 ```
 data/
 ├── bronze/ # Datos crudos de la API
 ├── silver/ # Datos limpios y transformados
 └── gold/ # Datos agregados para análisis
 ```
+
+### Ejemplo de log de ejecución
+
 
 ## Configuración e Instalación
 
@@ -72,7 +69,7 @@ data/
 ``pip install -e .``
 
 ### 4. Configurar variables (opcional)
-Editar config/settings.py según necesidad
+Editar ``config/settings.py`` según necesidad
 
 ### 5. Ejecución
 ### 5.1. Pipeline Completo (Full Load)
@@ -155,6 +152,12 @@ delta_lake_bucket/
 - ✅ Código 100% testeado y documentado
 
 ## Próximos Pasos
+- Orquestación con Airflow/Prefect
+- Despliegue en cloud (AWS S3 + Databricks)
+- Automatización con CI/CD
+- Caontainerización con Docker
+
+## Comentarios finales:
 
 Este proyecto demuestra mi capacidad para:
 - Diseñar arquitecturas de data lake escalables
