@@ -11,10 +11,10 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 
-# Configuracion de paths para importaciones
-root_path = Path(__file__).resolve().parent.parent
-if str(root_path) not in sys.path:
-    sys.path.insert(0, str(root_path))
+# # Configuracion de paths para importaciones
+# root_path = Path(__file__).resolve().parent.parent
+# if str(root_path) not in sys.path:
+#     sys.path.insert(0, str(root_path))
 
 from config.settings import (CONTENIDO_INCREMENTAL, 
                             NOMBRE_COLUMNAS_DESEADAS_HT, 
@@ -33,6 +33,8 @@ from src.extract import incremental_extraction as extr
 from src.transform import data_cleaning as clean, data_transformation as dtrans, aggregations
 from src.load import delta_writer
 
+# Configuracion de paths para importaciones
+helpers.setup_paths()
 
 # Configuración de logging y creación de carpeta de logs
 setup_logging('incremental')

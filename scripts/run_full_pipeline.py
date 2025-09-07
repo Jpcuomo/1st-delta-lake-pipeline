@@ -11,10 +11,10 @@ from datetime import datetime
 from pathlib import Path
 from config import logging_config
 
-# Configuracion de paths para importaciones
-root_path = Path(__file__).resolve().parent.parent
-if str(root_path) not in sys.path:
-    sys.path.insert(0, str(root_path))
+# # Configuracion de paths para importaciones
+# root_path = Path(__file__).resolve().parent.parent
+# if str(root_path) not in sys.path:
+#     sys.path.insert(0, str(root_path))
     
 from config.settings import (BINANCE_API, 
                              NOMBRE_COLUMNAS_DESEADAS_KL, 
@@ -30,6 +30,8 @@ from src.transform import data_cleaning, data_transformation, aggregations
 from src.load import delta_writer
 from src.quality import profiling
 
+# Configuracion de paths para importaciones
+helpers.setup_paths()
 
 # Configuración de logging y creación de carpeta de logs
 logging_config.setup_logging('full')

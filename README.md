@@ -1,86 +1,120 @@
-📊 Pipeline ETL - Datos de Binance con Delta Lake
-📋 Descripción
-Pipeline ETL completo para extracción, transformación y carga de datos financieros de la API de Binance. El proyecto implementa un data lake con arquitectura de medallón (bronze, silver, gold) almacenado en formato Delta Lake.
+# Pipeline ETL - Datos de Binance con Delta Lake
 
-🎯 Objetivos Cumplidos
-✅ Extracción de API: Datos de endpoints temporales (klines) y estáticos de Binance
+## Descripción
+Este es un pipeline completo de ingeniería de datos que extrae información financiera de la API de Binance, la procesa y la almacena en formato Delta Lake. Implementé una arquitectura de data lake organizada en tres capas (bronze, silver, gold) para gestionar los datos en diferentes estados de procesamiento.
 
-✅ Almacenamiento Delta Lake: Datos crudos y procesados en formato Delta
+## Qué funcionalidades implementé?
+## Extracción de datos
+- Conexión con múltiples endpoints de la API de Binance
+- Datos temporales (klines) que se actualizan regularmente
+- Soporte para extracción completa e incremental
+- Manejo de errores y reintentos automáticos
 
-✅ Procesamiento con Pandas: Transformaciones, limpieza y agregaciones
+## Procesamiento con Pandas
+- Limpieza de datos: eliminación de duplicados y valores nulos
+- Transformación de tipos de datos y formatos
+- Creación de nuevas columnas y métricas
+- Agregaciones y análisis de datos
+- Particionamiento por fecha y hora
 
-✅ Extracción incremental y full: Soporte para ambos modos de ingestión
+## Almacenamiento Delta Lake
+- Datos crudos en capa bronze
+- Datos procesados en capa silver
+- Datos enriquecidos en capa gold
+- Metadatos y logs de ejecución
 
-✅ Arquitectura en capas: Bronze (crudo), Silver (procesado), Gold (enriquecido)
-
-🏗️ Estructura del Data Lake
-text
+## Estructura del Data Lake
 data/
-├── bronze/    # Datos crudos de la API
-├── silver/    # Datos limpios y transformados  
-└── gold/      # Datos agregados para análisis
-⚙️ Configuración e Instalación
-1. Crear entorno virtual
-bash
+├── bronze/ # Datos crudos de la API
+├── silver/ # Datos limpios y transformados
+└── gold/ # Datos agregados para análisis
+
+
+## Configuración e Instalación
+
+### Prerequisitos
+- Python 3.8 o superior
+- Pip para gestionar dependencias
+- Acceso a internet para conectar con la API de Binance
+
+### 1. Crear y activar entorno virtual
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
-2. Instalar dependencias
-bash
+
+### 2. Instalar dependencias
 pip install -r requirements.txt
-3. Configurar variables (opcional)
+
+### 3. Instalar paquetes
+pip install -e .
+
+### 4. Configurar variables (opcional)
 Editar config/settings.py según necesidad
 
-🚀 Ejecución
-Pipeline Completo (Full Load)
-bash
+## 5. Ejecución
+### 5.1. Pipeline Completo (Full Load)
 python scripts/run_full_pipeline.py
-Pipeline Incremental
-bash
+
+### 5.2. Pipeline Incremental
 python scripts/run_incremental_pipeline.py
-📊 Transformaciones Implementadas
-Limpieza de datos: Eliminación de duplicados y valores nulos
 
-Conversión de tipos: Formateo de fechas y tipos de datos
+## Transformaciones Implementadas
+1- Limpieza de datos: Eliminación de duplicados y valores nulos
 
-Renombrado de columnas: Normalización de nombres
+2- Conversión de tipos: Formateo de fechas y tipos de datos
 
-Agregaciones: Group by con funciones de agregación
+3- Renombrado de columnas: Normalización de nombres
 
-Creación de columnas: Nuevas métricas derivadas
+4- Agregaciones: Group by con funciones de agregación
 
-Particionamiento: Por fecha y hora para optimización
+5- Creación de columnas: Nuevas métricas derivadas
 
-🔧 Tecnologías Utilizadas
-Python 3.8+ con Pandas para procesamiento
+6- Particionamiento: Por fecha y hora para optimización
 
-Delta Lake para almacenamiento
+## Tecnologías Utilizadas
+- Python + Pandas para procesamiento
 
-Requests para extracción de API
+- Delta Lake para almacenamiento eficiente
 
-ydata-profiling para control de calidad
+- Requests para consumir la API de Binance
 
-📁 Estructura del Proyecto
-src/extract/ - Extracción de datos de API
+- Logging para tracking de ejecuciones
 
-src/transform/ - Transformaciones con Pandas
+- ydata-profiling para control de calidad
 
-src/load/ - Carga a Delta Lake
+## Estructura del Proyecto
+- src/extract/ - Extracción de datos de API
 
-src/quality/ - Control de calidad y profiling
+- src/transform/ - Transformaciones con Pandas
 
-config/ - Configuración y settings
+- src/load/ - Carga a Delta Lake
 
-notebooks/ - Exploración y prototipos
+- src/quality/ - Control de calidad y profiling
 
-📋 Entregables
-Pipeline de extracción full e incremental
+- config/ - Configuración y settings
 
-Datos almacenados en formato Delta Lake
+- notebooks/ - Exploración y prototipos
 
-Transformaciones aplicadas con Pandas
+delta_lake_bucket/
+├── config/           # Configuración y settings
+├── data/            # Datos en formato Delta Lake
+│   ├── bronze/      # Datos crudos
+│   ├── silver/      # Datos procesados
+│   └── gold/        # Datos enriquecidos
+├── notebooks/       # Experimentación y análisis
+├── scripts/         # Scripts de ejecución
+├── src/            # Código fuente
+│   ├── extract/     # Extracción de datos
+│   ├── transform/   # Transformaciones
+│   ├── load/        # Carga a Delta
+│   └── utils/       # Utilidades
+└── tests/          # Tests automatizados
 
-Reportes de calidad de datos
+## Notas importantes
+- Los datos se almacenan localmente en formato Delta Lake
 
-Documentación y código modular
+- Las ejecuciones incrementales evitan reprocesar datos existentes
 
+- Los reportes de calidad ayudan a identificar problemas en los datos
+
+- El código está modularizado para mejor mantenimiento
