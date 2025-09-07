@@ -113,6 +113,10 @@ def generar_profiling_report(df:pd.DataFrame) -> ProfileReport|None:
 ### Example of generated report:
 
 ![imagen](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/YData2.png)
+
+### Intelligent Data Partitioning in Silver Layer
+
+I implemented partitioning by date and time in the silver layer to optimize query performance and efficiently manage historical data
 ```text
 silver/
 └── api_binance/
@@ -125,10 +129,6 @@ silver/
             ├── date=2023-01-02/
             └── _delta_log/
 ```
-
-### Intelligent Data Partitioning in Silver Layer
-
-I implemented partitioning by date and time in the silver layer to optimize query performance and efficiently manage historical data
 
 ### Key Benefits
 - Cross-platform: Paths that work on Windows, Linux, and Mac
@@ -175,16 +175,7 @@ def test_data_quality():
     assert expected_columns_present(df)
     assert data_types_correct(df)
 ```
-
-
-## Funcionalidades principales
-## Extracción de datos
-- Conexión con múltiples endpoints de la API de Binance
-- Datos temporales (klines) que se actualizan regularmente
-- Soporte para extracción completa (full load) e incremental
-- Manejo de errores y reintentos automáticos
-
-### Muestra de test unitarios
+### Unit test sample
 ```python
     # Test 5: Exception for empty dictionary
 def test_diccionario_vacio():
@@ -192,6 +183,14 @@ def test_diccionario_vacio():
     with pytest.raises(TypeError):
         dt.renombrar_columnas(df, {})
 ```
+
+## Key features
+## Data extraction
+- Connection to multiple Binance API endpoints
+- Temporary data (klines) that are updated regularly
+- Support for full load and incremental extraction
+- Error handling and automatic retries
+
 
 ## Resultas & Impact
 
