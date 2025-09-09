@@ -84,8 +84,7 @@ def setup_logging(tipo_extraccion:str, level:int=logging.INFO) -> None:
 ```
 ### Logging sample
 
-![logs1](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/log1.png)
-![logs2](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/logs2.png)
+![logs1](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/log.png)
 
 ### Data Quality & Performance Optimization
 
