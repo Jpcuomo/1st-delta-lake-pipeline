@@ -32,7 +32,7 @@ def extract_from_api() -> pd.DataFrame:
         df = data_loader.build_table(datos)
         batch_list.append(df)
         
-    logger.info(f'Batches extracted: {batch_qtty} (total rows: {len(df) * batch_qtty}')
+    logger.info(f'Batches extracted: {batch_qtty} (total rows: {len(df) * batch_qtty})')
     df_raw = pd.concat(batch_list, ignore_index=True)
     
     return df_raw

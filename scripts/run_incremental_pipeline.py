@@ -173,17 +173,13 @@ def run_incremental_pipeline():
         # Rounding for presentation
         cols = ['mean_price', 'qty_per_hour', 'total_quote_qty']
         
-        if df_summarized is not None and df_summarized.empty or None:
+        if df_summarized is not None and not df_summarized.empty:
             df_summarized[cols] = df_summarized[cols].round(3).map("{:.3f}".format)
+            logger.debug(df_summarized.head().to_string())
+            logger.info('Summarization stage completed.')
         else:
             logger.error(f'Error creating "df_summarized"')
 
-        print(df_summarized.head())
-        
-        logger.debug(df_summarized.head().to_string())
-        
-        logger.info('Summarization stage completed.')
-        
         
         #----------------------------------------------
         # 4. LOAD
