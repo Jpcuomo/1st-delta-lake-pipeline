@@ -12,7 +12,7 @@ from datetime import datetime
 from config.settings import (INCREMENTAL_CONTENT, 
                             DESIRED_COLS_HT, 
                             CONVERSION_MAPPING_HT, 
-                            BINANCE_API_CONFIG, LIMIT, SYMBOL, BATCH_QTTY)
+                            BINANCE_API_CONFIG, LIMIT, SYMBOL)
 from config.paths import (INCREMENTAL_FILE, 
                           INCREMENTAL_FOLDER, 
                           INCREMENTAL_DIR, 

@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 
 def logging_setup(extraction_type:str, level:int=logging.INFO) -> str:
-    """Configuración centralizada de logging"""
+    """Centralized logging configuration"""
     
     correlation_id = str(uuid.uuid4())[:8]
     

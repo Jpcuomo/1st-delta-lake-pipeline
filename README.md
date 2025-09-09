@@ -58,29 +58,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Metadata
 #----------------------------------------------
 INCREMENTAL_DIR = Path("metadata") / "incremental.json"
-CARPETA_INCREMENTAL = INCREMENTAL_DIR.parent
-ARCHIVO_INCREMENTAL = INCREMENTAL_DIR.name
+INCREMENTAL_FOLDER = INCREMENTAL_DIR.parent
+INCREMENTAL_FILE = INCREMENTAL_DIR.name
 ```
 
 ### Professional Logging System
 
 I set up a complete logging system with different levels and handlers for monitoring in production:
 ```python
-def setup_logging(tipo_extraccion:str, level:int=logging.INFO) -> None:
-    """Configuración centralizada de logging"""
+def logging_setup(extraction_type:str, level:int=logging.INFO) -> str:
+    """Centralized logging configuration"""
+    
+    correlation_id = str(uuid.uuid4())[:8]
     
     base_dir = Path(__file__).resolve().parent.parent
-    log_dir = base_dir / 'logs' / tipo_extraccion
+    log_dir = base_dir / 'logs' / extraction_type
     log_dir.mkdir(parents=True, exist_ok=True)
     
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format=f'%(asctime)s - %(name)s - %(levelname)s - [exec_id:{correlation_id}] - %(message)s',
         handlers=[
             logging.FileHandler(log_dir / f"pipeline_{datetime.now().strftime('%Y%m%d')}.log"),
             logging.StreamHandler()
         ]
     )
+    return correlation_id
 ```
 ### Logging sample
 
@@ -91,21 +94,21 @@ def setup_logging(tipo_extraccion:str, level:int=logging.INFO) -> None:
 I implemented automatic data quality reports using ydata-profiling to ensure data integrity in each execution:
 
 ```python
-def generar_profiling_report(df:pd.DataFrame) -> ProfileReport|None:
+def generate_profiling_report(df:pd.DataFrame) -> ProfileReport|None:
     '''
-    Devuleve un reporte detallado con caracteristicas del DataFrame,
-    como registros distintos, faltantes, tamaño en memoria, etc.
+    Returns a detailed report with DataFrame characteristics,
+    such as distinct records, missing records, memory size, etc.
 
     Args:
-        df (pd.DataFrame): DataFrame de Pandas que se desea analizar
-    
+        df (pd.DataFrame): Pandas DataFrame to be analyzed
+
     Returns:
-        ProfileReport: Informe sobre los perfiles
+        ProfileReport: Profile report
     '''
     if isinstance(df, pd.DataFrame):
         return ProfileReport(df)
     else:
-        print('El Data frame no es válido')
+        print('The data frame is invalid.')
         return None
 ```
 
@@ -229,28 +232,27 @@ def test_diccionario_vacio():
 ```text
 delta_lake_bucket/
 ├── README.md
-├── config/           # Configuración y settings
-├── data/             # Data Lake en 3 capas
-│   ├── bronze/       # Datos crudos de API
-│   ├── silver/       # Datos limpios y transformados  
-│   └── gold/         # Datos enriquecidos para análisis
-├── logs/             # Logs de ejecución
-├── notebooks/        # Exploración y prototipos
-├── pyproject.toml    # Configuración del paquete
-├── reports/          # Reportes de calidad
-├── requirements.txt  # Dependencias
-├── scripts/          # Scripts de ejecución
-├── setup.py          # Setup del paquete
-├── src/              # Código fuente del pipeline
-│   ├── extract/      # Extracción de datos
-│   ├── transform/    # Transformaciones
-│   ├── load/         # Carga a Delta Lake
-│   ├── quality/      # Control de calidad
-│   └── utils/        # Utilidades
-└── tests/            # Tests automatizados
+├── config/           # Configurations & settings
+├── data/             # 3 layer Data Lake
+│   ├── bronze/       # API's raw data
+│   ├── silver/       # Cleaned and transformed data
+│   └── gold/         # Enriched data for analisys
+├── logs/             # Execution logs
+├── notebooks/        # Exploration and prototypes
+├── pyproject.toml    # Package configuration
+├── reports/          # Quality reports
+├── requirements.txt  # Dependencies
+├── scripts/          # Execution scripts
+├── setup.py          # Package setup
+├── src/              # Pipeline source code
+│   ├── extract/      # Data extraction
+│   ├── transform/    # Transformations
+│   ├── load/         # Delta Lake load
+│   ├── quality/      # Quality control
+│   └── utils/        # Utilities
+└── tests/            # Automated tests
 
 ```
-
 
 ## Getting Started
 ### Prerequisites
@@ -294,6 +296,5 @@ This project helped me master:
 - Cloud deployment on AWS/Databricks
 - Real-time processing with streaming
 - Advanced monitoring and alerting
-
 
 - **Interested in implementing similar solutions?** [Let's connect!](mailto:jpcuomo2000l@gmail.com)
