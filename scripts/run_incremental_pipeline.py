@@ -1,223 +1,244 @@
 #!usr/bin/env python3
 """
-Pipeline completo ETL para extracción incremental de API de Binance
-Realiza extracción -> transformación -> carga -> quality testing
+Complete ETL pipeline for incremental extraction of Binance API
+Performs extraction -> transformation -> loading -> quality testing
 """
 
 import os
 import logging
-import sys
 import pandas as pd
-from pathlib import Path
 from datetime import datetime
 
-# # Configuracion de paths para importaciones
-# root_path = Path(__file__).resolve().parent.parent
-# if str(root_path) not in sys.path:
-#     sys.path.insert(0, str(root_path))
-
-from config.settings import (CONTENIDO_INCREMENTAL, 
-                            NOMBRE_COLUMNAS_DESEADAS_HT, 
+from config.settings import (INCREMENTAL_CONTENT, 
+                            DESIRED_COLS_HT, 
                             CONVERSION_MAPPING_HT, 
-                            BINANCE_API)
-from config.paths import (ARCHIVO_INCREMENTAL, 
-                          CARPETA_INCREMENTAL, 
+                            BINANCE_API_CONFIG, LIMIT, SYMBOL, BATCH_QTTY)
+from config.paths import (INCREMENTAL_FILE, 
+                          INCREMENTAL_FOLDER, 
                           INCREMENTAL_DIR, 
                           PATH_BRONZE_DELTALAKE_INCREMENTAL, 
                           PATH_SILVER_DELTALAKE_INCREMENTAL, 
                           PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL,
                           REPORTS_INCREMENTAL)
-from config.logging_config import setup_logging
+from config.logging_config import logging_setup
 from src.utils import helpers, file_utils, memory_utils
 from src.extract import incremental_extraction as extr
-from src.transform import data_cleaning as clean, data_transformation as dtrans, aggregations
+from src.transform import data_cleaning as dc, data_transformation as dt, aggregations
 from src.load import delta_writer
 
-# Configuracion de paths para importaciones
+# Configuring paths for imports
 helpers.setup_paths()
 
-# Configuración de logging y creación de carpeta de logs
-setup_logging('incremental')
+# Logging configuration and log folder creation
+correlation_id = logging_setup('incremental')
 logger = logging.getLogger('pipeline')
 
-# Creación de archivo json con metadata
-if not os.path.exists(INCREMENTAL_DIR): # Esta línea evita que se reinicie a 0 en cada ejecución
-    file_utils.crear_archivo_incremental(CONTENIDO_INCREMENTAL, 
-                                         ARCHIVO_INCREMENTAL, 
-                                         CARPETA_INCREMENTAL)
-
+# Creation of json file with metadata
+if not os.path.exists(INCREMENTAL_DIR): # This line prevents it from resetting to 0 on each execution.
+    file_utils.create_incremental_file(INCREMENTAL_CONTENT, 
+                                         INCREMENTAL_FILE, 
+                                         INCREMENTAL_FOLDER)
 
 #----------------------------------------------
-# ORQUESTACION DEL PIPELINE
+# PIPELINE ORCHESTRATION
 #----------------------------------------------
 def run_incremental_pipeline():
-    """Ejecuta el pipeline ETL completo"""
+    """Runs the entire ETL pipeline"""
     try:
-        logger.info('---------------------------------------------------------------------------------------')
-        logger.info('Iniciando pipeline completo.')
-        
-        # Inicia conteo del tiempo de ejecución
+        # Start counting execution time
         start_time = datetime.now()
-        metricas = {'start_time':start_time}
+        metrics = {'start_time':start_time}
+        
+        logger.info("""
+                    -----------------------------
+                    Starting complete pipeline
+                    -----------------------------""")  
 
-        
         #----------------------------------------------
-        # 1. EXTRACCION
+        # 1. EXTRACTION
         #----------------------------------------------
-        logger.info('Etapa 1: Extracción')        
+        logger.info('----- Stage 1: Extraction -----')        
+        logger.info(f'Processing symbol: {SYMBOL}')
         
-        # Extracción de datos de la API
+        # API data extraction
         df_raw = extr.extract_from_api()
         
-        # Guardo el DataFrame en formato Delta Lake
-        # Como los campos nuevos son siempre distintos utilizo un MERGE sin UPDATE
+        # Save the DataFrame in Delta Lake format.
+        # Since the new fields retrieved from the API are always different, I use a MERGE without UPDATE.
         delta_writer.save_new_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_INCREMENTAL, 'src.id = tgt.id')
-        logger.info('Datos cargados en capa bronze exitosamente.')
+        logger.info('Data successfully uploaded to bronze layer.')
         
-        # Traigo solo los valores de la última extracción para el procesamiento
-        df_raw = delta_writer.leer_extraccion_reciente(PATH_BRONZE_DELTALAKE_INCREMENTAL, INCREMENTAL_DIR)
+        # Only bring the values from the last extraction for processing.
+        df_raw = delta_writer.read_recent_extraction(PATH_BRONZE_DELTALAKE_INCREMENTAL, INCREMENTAL_DIR)
         print(df_raw.head())
         
-        metricas['filas_extraidas'] = len(df_raw)
+        metrics['extracted_files'] = len(df_raw)
         min_id = df_raw['id'].min()
         max_id = df_raw['id'].max()
-        metricas['min_id'] = min_id
-        metricas['max_id'] = max_id
+        metrics['min_id'] = min_id
+        metrics['max_id'] = max_id
         
-        logger.info(f"Filas extraidas: {metricas['filas_extraidas']}")
-        logger.info(f"Filas extraidas desde id {metricas['min_id']} hasta id {metricas['max_id']}")
+        if metrics['extracted_files'] < LIMIT:
+             logger.warning(f'Warning! {metrics['extracted_files']} were extracted instead of {LIMIT}. Data might be axhausted')
+                
+        logger.debug(f"Extracted rows: {metrics['extracted_files']}")
+        logger.debug(f"Rows extracted from id {metrics['min_id']} to id {metrics['max_id']}")
 
+        # Check memory size of data frame
+        mem_size = df_raw.memory_usage(deep=True).sum()
+        metrics['raw_data_size'] = mem_size / 1024
+        logger.info(f'Raw data frame size: {metrics['raw_data_size']:.2f} MB')
+        
         
         #----------------------------------------------
-        # 2. TRANSFORMACION
+        # 2. TRANSFORM
         #----------------------------------------------
-        logger.info('Etapa 2: Transformación')
+        logger.info('----- Stage 2: Transformation -----')
             
-        # Verificación de tipos de datos y espacio en memoria antes de iniciar transformaciones.
-        memory_utils.mostrar_espacio_en_memoria_df(df_raw)
+        # Verification of data types and memory space before starting transformations.
+        memory_utils.show_df_memory_space(df_raw)
         
-        # Contar registros nulos por columna
+        # Count null records per column
         cols = df_raw.columns
-        clean.contar_registros_nulos(df_raw, cols)
+        dc.count_null_records(df_raw, cols)
         
-        # Ordeno por 'id' y elimino duplicados de haberlos
-        df_clean = dtrans.ordenar_dataframe(df_raw, sort_by='id')
+        # Sort by 'id' and remove duplicates if any
+        df_clean = dt.sort_dataframe(df_raw, sort_by='id')
         
-        # Eliminación de registros duplicados
-        df_clean = clean.eliminar_duplicados(df_clean)
-        print(f'Cantidad de filas: {df_clean.shape[0]}')
+        # Removal of duplicate records
+        df_clean = dc.remove_duplicates(df_clean)
+        print(f'Number of rows: {df_clean.shape[0]}')
         
-        # Renombro columnas
-        df_clean = dtrans.renombrar_columnas(df_clean, NOMBRE_COLUMNAS_DESEADAS_HT)
+        # Rename columns
+        df_clean = dt.rename_columns(df_clean, DESIRED_COLS_HT)
         
-        # Convierto los 'milisegundos' a datetime y los asigno a la columna auxiliar 'time'
-        df_clean['time'] = dtrans.convertir_milisegundos_a_datetime(df_clean, ['miliseconds'])
+        # I convert the 'milliseconds’+' to datetime and assign them to the auxiliary column 'time'.
+        df_clean['time'] = dt.convert_milliseconds_to_datetime(df_clean, ['milliseconds'])
         
-        # Creo la columna 'date' con formato dd/mm/yy a partir de 'time'
+        # Create the 'date' column with the format dd/mm/yy based on 'time'
         df_clean["date"] = pd.to_datetime(df_clean["time"], unit="ms").dt.date
 
         # Creo la columna 'hour' a partir de 'time'. 
         df_clean['hour'] = pd.to_datetime(df_clean['time'].dt.strftime('%H:%M:%S.%f'), format="%H:%M:%S.%f")
         
-        # Extraer solo la hora (0–23) como int
+        # Extract only the hour (0–23) as int
         df_clean["hr"] = pd.to_datetime(df_clean["time"], unit="ms").dt.hour.astype("int32")
 
-        # Elimino la columna auxiliar 'time', ya que no es necesaria
-        # Elimino la columna 'is_best_match' ya que es siempre True y no suma al análisis
+        # Remove the auxiliary column 'time', as it is not necessary.
+        # Remove the column 'is_best_match' as it is always True and does not add to the analysis.
         df_clean = df_clean.drop(columns=['time','isBestMatch'])
         
-        # Casteo de datos numéricos tipo object a float32 para hacer agregaciones futuras
-        df_clean = dtrans.castear_tipos_de_dato(df_clean, CONVERSION_MAPPING_HT)
+        # Casting numeric data types from object to float32 for future aggregations
+        df_clean = dt.cast_data_types(df_clean, CONVERSION_MAPPING_HT)
         
-        # Cambio la posición de las columnas para presentar de forma más prolija
-        df_clean = dtrans.cambiar_posicion_de_columna(df_clean, 'date', 'is_buyer_maker')
-        df_clean = dtrans.cambiar_posicion_de_columna(df_clean, 'hour', 'is_buyer_maker')
+        # I change the position of the columns to present them in a more orderly manner.
+        df_clean = dt.change_column_position(df_clean, 'date', 'is_buyer_maker')
+        df_clean = dt.change_column_position(df_clean, 'hour', 'is_buyer_maker')
         print(df_clean.head())
         
-        # Verificación de tipos de datos y espacio en memoria luego de iniciar transformaciones.
-        memory_utils.mostrar_espacio_en_memoria_df(df_clean)
+        # Verification of data types and memory space after initiating transformations.
+        memory_utils.show_df_memory_space(df_clean)
         
-        logger.info(f'Se limpiaron/ transformaron {len(df_clean)} registros')
+        logger.info(f'{len(df_clean)} records were cleaned/transformed.')
+        
+        mem_size = df_clean.memory_usage(deep=True).sum()
+        metrics['cleansed_data_size'] = mem_size / 1024
+        logger.info(f'Cleansed data frame size: {metrics['cleansed_data_size']:.2f} MB')
         
         
         #----------------------------------------------
-        # 3. SUMARIZACION
+        # 3. SUMMARIZATION
         #----------------------------------------------
-        logger.info('Etapa 3: Sumarización')
+        logger.info('----- Stage 3: Summarization -----')
         
-        group_by_cols = ['date','hr','is_buyer_maker'] # Lista de columnas por las que agrupar
+        group_by_cols = ['date','hr','is_buyer_maker'] # List of columns to group by
 
-        agg_dict = {# Diccionario con columnas como clave y agregaciones como valor
-            'price':'mean',      # promedio de la columna 'price'
-            'quantity':'sum',    # promedio de la columna 'quantity'
-            'quote_qty':'sum',   # Sumatoria de cantidades
-            'id':'count'         # cuenta de registros por grupo
+        agg_dict = {# Dictionary with columns as keys and aggregations as values
+            'price':'mean',      # average of the 'price' column
+            'quantity':'sum',    # average of the 'quantity' column
+            'quote_qty':'sum',   # Sum of quantities
+            'id':'count'         # record count per group
         }
 
-        rename_cols = {# Diccionario con los cambios de nombres para las columnas agregadas
+        rename_cols = {# Dictionary with name changes for added columns
             'price':'mean_price',
             'quantity':'qty_per_hour',
             'quote_qty':'total_quote_qty',
             'id':'id_count'
         }
         
-        # Asigna el DF sumarizado a un nuevo DF
-        df_sumarizado = aggregations.sumarizar_df(df_clean, group_by_cols, agg_dict, rename_cols)
+        # Assign the summarized DF to a new DF
+        df_summarized = aggregations.sumarizar_df(df_clean, group_by_cols, agg_dict, rename_cols)
 
-        # Redondeo para presentación
+        # Rounding for presentation
         cols = ['mean_price', 'qty_per_hour', 'total_quote_qty']
         
-        if not df_sumarizado.empty or None:
-            df_sumarizado[cols] = df_sumarizado[cols].round(3).map("{:.3f}".format)
+        if df_summarized is not None and df_summarized.empty or None:
+            df_summarized[cols] = df_summarized[cols].round(3).map("{:.3f}".format)
         else:
-            logger.error(f'Error al crear "df_sumarizado"')
+            logger.error(f'Error creating "df_summarized"')
 
-        print(df_sumarizado.head())
+        print(df_summarized.head())
         
-        logger.debug(df_sumarizado.head().to_string())
+        logger.debug(df_summarized.head().to_string())
+        
+        logger.info('Summarization stage completed.')
         
         
         #----------------------------------------------
-        # 4. CARGA
+        # 4. LOAD
         #----------------------------------------------
-        logger.info('Etapa 4: Carga')
+        logger.info('----- Stage 4: Loading -----')
         
-        # Guardo el DF en la capa silver, particionando por fecha y hora.
-        BINANCE_HIST_TRADES = BINANCE_API['historical_trades']
+        # Store the DF in the silver layer, partitioning by date and time.
+        BINANCE_HIST_TRADES = BINANCE_API_CONFIG['historical_trades']
         delta_writer.save_new_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_INCREMENTAL, 
                                             'src.id = tgt.id', BINANCE_HIST_TRADES['partition_cols'])
-        logger.info('Datos cargados en capa silver exitosamente.')
+        logger.info('Transformed data successfully loaded to silver layer.')
         
-        # Guardado del DF en formato Delta Lake, en modo 'overwrite' por defecto
-        # Este modo sobreescribe los cambios, pero permite consultar registro histórico
-        delta_writer.save_data_as_delta(df_sumarizado, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL)
-        logger.info('Datos cargados en capa gold exitosamente.')
+        # Save the DF in Delta Lake format, in 'overwrite' mode by default.
+        # This mode overwrites changes, but allows historical records to be queried.
+        delta_writer.save_data_as_delta(df_summarized, PATH_GOLD_SUMMARIZED_TABLE_INCREMENTAL)
+        logger.info('Summarized data successfully loaded to gold layer.')
         
         
         #----------------------------------------------
         # 5. QUALITY CHECK
         #----------------------------------------------
-        logger.info("Etapa 5: Control de calidad")
+        logger.info("----- Stage 5: Quality check -----")
         from src.quality import profiling
         
-        report = profiling.generar_profiling_report(df_clean)
+        report = profiling.generate_profiling_report(df_clean)
         report_path = REPORTS_INCREMENTAL / f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report.to_file(report_path)
 
 
         #----------------------------------------------
-        # METRICAS FINALES
+        # FINAL METRICS
         #----------------------------------------------
         end_time = datetime.now()
-        metricas['end_time'] = end_time
+        metrics['end_time'] = end_time
         
         duration = (end_time - start_time).total_seconds()
-        logger.info(f'Pipeline completado en: {duration:.2f} segundos')
-        logger.info(f"Registros procesados: {len(df_clean)}")
-        logger.info(f"Reporte guardado en: {report_path}")
+        logger.info(f'Pipeline completed in: {duration:.2f} seconds')
+        logger.debug(f"Processed records: {len(df_clean)}")
+        logger.debug(f"Report saved in: {report_path}")
+        
+        summary = f"""
+        ------------------- PIPELINE SUMMARY -------------------
+        Exec_id: {correlation_id}
+        Symbol: {SYMBOL}
+        Records processed: {len(df_clean)}
+        Duration: {duration:.2f} seconds
+        Raw size: {metrics['raw_data_size']:.2f} MB -> Cleansed size: {metrics['cleansed_data_size']:.2f} MB
+        Report: {report_path}
+        --------------------------------------------------------
+        """
+        logger.info(summary)
+        
     except Exception as e:
-        logger.error(f'No se pudo correr el pipeline: {e}')
+        logger.error(f'The pipeline could not be run: {e}')
         raise
     
 if __name__=='__main__':

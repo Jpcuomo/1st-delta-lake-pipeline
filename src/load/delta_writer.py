@@ -7,63 +7,63 @@ from pathlib import Path
 
 from deltalake import write_deltalake, DeltaTable
 from deltalake.exceptions import TableNotFoundError
-from src.utils.config_utils import obtener_archivo_incremental
+from src.utils.file_utils import get_incremental_data
 
 logger = logging.getLogger('pipeline')
 
 
-def leer_delta_lake(path:Path) -> pd.DataFrame|None:
+def read_delta_lake(path:Path) -> pd.DataFrame|None:
     '''
-    Lee el archivo Delta Lake ubicado en la ruta del parámetro y lo
-    transforma en un DataFrame de Pandas.
+    Reads the Delta Lake file located at the parameter path 
+    and transforms it into a Pandas DataFrame.
     
     Args:
-        path (str): String con la ruta relativa al archivo Delta Lake.
+        path (str): String with the relative path to the Delta Lake file.
     
     Returns:
         pd.DataFrame|None: 
-        DataFrame de Pandas si encuentra el path, sino None
+        Pandas DataFrame if it finds the path, otherwise None
     '''
     if os.path.exists(path):
         return DeltaTable(path).to_pandas()
     else:
-        logger.info('El path al archivo no fue encontrado')
+        logger.info('The path to the file was not found')
         return None
     
     
-def leer_extraccion_reciente(path_bronce:Path, path_incremental:Path) -> pd.DataFrame:
+def read_recent_extraction(bronze_path:Path, incremental_path:Path) -> pd.DataFrame:
     '''
-    Lee y devuelve únicamente los registros con id mayor al último valor 
-    procesado desde el Delta Lake en la capa bronce.
+    Read and return only records with an ID greater than the last value 
+    processed from Delta Lake in the bronze layer.
 
     Args:
-        path_bronce (str): Ruta donde está almacenada la tabla en Delta Lake.
-        path_incremental (str): Ruta al archivo .json con las variables incrementales.
+        bronze_path (str): Path where the table is stored in Delta Lake.
+        incremental_path (str): Path to the .json file with the incremental variables.
 
     Returns:
-        pd.DataFrame: DataFrame con los registros nuevos (incrementales).
+        pd.DataFrame: DataFrame with the new (incremental) records.
     '''
     try:
-        dt = DeltaTable(path_bronce)
+        dt = DeltaTable(bronze_path)
     
-        contenido_incremental = obtener_archivo_incremental(path_incremental)
-        valor_previo = contenido_incremental['valor_previo'] # último id ya procesado en silver
-        ultimo_valor = contenido_incremental['ultimo_valor'] # último id disponible en bronce
+        incremental_content = get_incremental_data(incremental_path)
+        previous_value = incremental_content['previous_value'] # last ID already processed in silver
+        last_value = incremental_content['last_value'] # last ID available in bronze
         
-        # Filtro para leer solo los registros
-        df = dt.to_pandas(filters=[("id", ">", valor_previo)])
+        # Filter to read only the records
+        df = dt.to_pandas(filters=[("id", ">", previous_value)])
         
-        # Actualizo valor previo con el último valor
-        valor_previo = contenido_incremental['ultimo_valor']
+        # Update previous value with latest value
+        previous_value = incremental_content['last_value']
         
-        # Actualizar el último valor
-        with open(path_incremental, "w", encoding="utf-8") as f:
-            json.dump({"valor_previo":valor_previo,"ultimo_valor": ultimo_valor}, f, indent=4, ensure_ascii=False)
+        # Update the last value
+        with open(incremental_path, "w", encoding="utf-8") as f:
+            json.dump({"previous_value":previous_value,"last_value": last_value}, f, indent=4, ensure_ascii=False)
             
         return df
     
     except Exception as e:
-        logger.info(f'No se pudo procesar la tabla Delta Lake: {e}')
+        logger.info(f'The Delta Lake table could not be processed: {e}')
         raise
     
     

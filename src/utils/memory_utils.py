@@ -1,12 +1,12 @@
 import pandas as pd
 
 
-def mostrar_espacio_en_memoria_df(df:pd.DataFrame):
+def show_df_memory_space(df:pd.DataFrame):
     '''
-    Muestra una tabla con tipos de dato de cada columna, cantidad de registros, cantidad de no nulos
-    y espacio total en memoria del Data frame
+    Displays a table with data types for each column, number of records, number of non-nulls,
+    and total memory space of the data frame.
     
     Args:
-        df (pd.DataFrame): Es el Data Frame que se desea consultar
+        df (pd.DataFrame): It is the Data Frame you want to query.
     '''
     df.info(memory_usage='deep')

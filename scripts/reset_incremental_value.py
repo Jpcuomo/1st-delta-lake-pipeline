@@ -1,5 +1,5 @@
-from config.paths import ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL
-from src.utils.config_utils import crear_archivo_incremental
-from config.settings import CONTENIDO_INCREMENTAL
+from config.paths import INCREMENTAL_FILE, INCREMENTAL_FOLDER
+from src.utils.file_utils import create_incremental_file
+from config.settings import INCREMENTAL_CONTENT
 
-crear_archivo_incremental(CONTENIDO_INCREMENTAL, ARCHIVO_INCREMENTAL, CARPETA_INCREMENTAL)
+create_incremental_file(INCREMENTAL_CONTENT, INCREMENTAL_FILE, INCREMENTAL_FOLDER)

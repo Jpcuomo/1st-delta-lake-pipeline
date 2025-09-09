@@ -3,74 +3,75 @@ import json
 import pandas as pd
 
 
-def crear_archivo_incremental(contenido_incremental:list|dict, archivo_json:str, carpeta:str=None) -> None:
+def create_incremental_file(incremental_content:list|dict, json_file:str, folder:str=None) -> None:
     """
-    Verifica si existe la carpeta metadata, sino la crea.
-    Luego guarda en ella el json con valor inicial.
+    Check if the metadata folder exists, and if not, create it.
+    Then save the json file with the initial value in it.
     
     Args:
-        contenido_incremental (list | dict): contenido que se va a guardar como json
-        archivo_json (str): nombre del archivo json
+        incremental_content (list | dict): content to be saved as json
+        json_file (str): name of the json file
+        folder (str): folder that will contain the incremental json file
     
     Returns:
         None
     """
-    if carpeta:
-        os.makedirs(carpeta, exist_ok=True)
-        ruta = os.path.join(carpeta, archivo_json) 
+    if folder:
+        os.makedirs(folder, exist_ok=True)
+        ruta = os.path.join(folder, json_file) 
     else:
-        ruta = archivo_json
+        ruta = json_file
         
-    if isinstance(contenido_incremental, (list,dict)): 
+    if isinstance(incremental_content, (list,dict)): 
         with open(ruta, 'w', encoding='utf-8') as f:
-            json.dump(contenido_incremental, f, indent=4, ensure_ascii=False)
+            json.dump(incremental_content, f, indent=4, ensure_ascii=False)
     else:
         raise ValueError('El parámetro no tiene un formato json')
     
     
-def obtener_archivo_incremental(ruta_archivo_incremental:str) -> dict | list:
+def get_incremental_data(incremental_file_path:str) -> dict | list:
     """
-    Lee y retorna el contenido de un archivo JSON incremental.
+    Reads and returns the contents of an incremental JSON file.
 
     Args:
-        ruta_archivo_incremental (str): Ruta de archivo JSON.
+        incremental_file_path (str): JSON file path.
 
     Returns:
-        dict|list|None: Contenido de archivo o None si hay error.
+        dict|list|None: File content or None if there is an error.
     """
-    if os.path.exists(ruta_archivo_incremental):
+    if os.path.exists(incremental_file_path):
         try:
-            with open(ruta_archivo_incremental, 'r', encoding='utf-8') as f:
-                contenido = json.load(f)
-            return contenido
+            with open(incremental_file_path, 'r', encoding='utf-8') as f:
+                content = json.load(f)
+            return content
         except json.JSONDecodeError:
-            print('El archivo json es defectuoso')
+            print('The JSON file is corrupt.')
             return None
     else:
-        print(f'La ruta "{ruta_archivo_incremental}" no es válida')
+        print(f'Path to "{incremental_file_path}" is not válid')
         return None
     
     
-def guardar_formato_parquet(df:pd.DataFrame, path:str, engine:str='pyarrow', compression:str='snappy', index:bool=False):
+def save_parquet_format(df:pd.DataFrame, path:str, engine:str='pyarrow', compression:str='snappy', index:bool=False):
     '''
-    Guarda un DF en formato parquet
+    Save a DF in parquet format
     
     Args:
-        df (pd.DataFrame): El DF que se desea guardar en formato parquet
-        path (str): Path del archivo de guardado. Si no existe lo crea
-        engine (str): Motor de guardado ('pyarrow' | 'fastparquet'), por defecto 'pyarrow'
-        compression (str): Método de compresión
-        index (bool): Agregar o no una columna indexada
+        df (pd.DataFrame): The DF you want to save in parquet format.
+        path (str): Path of the saved file. If it does not exist, it will be created.
+        engine (str): Saving engine ('pyarrow' | 'fastparquet'), default 'pyarrow'.
+        compression (str): Compression method.
+        index (bool): Whether or not to add an indexed column.
         
     Returns:
         None
     '''
-    # Creo el directorio si no existe
+    # Create the directory if it does not exist
     dir_path = os.path.dirname(path)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
     
-    # Guardo en formato parquet
+    # save in parquet format
     df.to_parquet(
     path,
     engine=engine,

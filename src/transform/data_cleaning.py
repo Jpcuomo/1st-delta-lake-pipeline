@@ -1,75 +1,71 @@
 import pandas as pd
-import numpy as np
 
 
-def eliminar_duplicados(df: pd.DataFrame, subset:list=None, keep='first') -> pd.DataFrame:
+def remove_duplicates(df: pd.DataFrame, subset:list=None, keep='first') -> pd.DataFrame:
     """
-    Elimina filas duplicadas en un DataFrame según una columna,
-    manteniendo la primera aparición.
+    Removes duplicate rows in a DataFrame based on a column,
+    keeping the first occurrence.
 
     Args:
-        df (pd.DataFrame): DataFrame a limpiar.
-        subset (str): Columna en la que se evaluarán duplicados.
+        df (pd.DataFrame): DataFrame to be cleaned.
+        subset (str): Column in which duplicates will be evaluated.
 
     Returns:
-        pd.DataFrame: DataFrame sin duplicados en la columna especificada.
+        pd.DataFrame: DataFrame without duplicates in the specified column.
     """
     return df.drop_duplicates(subset=subset, keep=keep)
 
 
-def eliminar_registros_nulos(df: pd.DataFrame, subset: list) -> pd.DataFrame:
+def delete_null_records(df: pd.DataFrame, subset: list) -> pd.DataFrame:
     '''
-    Elimina registros nulos en las columnas especificadas.
+    Removes null records in the specified columns.
 
     Args:
-    df (pd.DataFrame): DataFrame a procesar.
-    subset (list): Lista de columnas en las que se buscarán valores nulos. 
-        Si alguna de esas columnas contiene NaN en una fila, la fila completa será eliminada.
+        df (pd.DataFrame): DataFrame to be processed.
+        subset (list): List of columns in which null values will be searched for.
+            If any of these columns contain NaN in a row, the entire row will be removed.
 
     Returns:
-    pd.DataFrame: DataFrame sin registros nulos en las columnas indicadas.
+        pd.DataFrame: DataFrame without null records in the specified columns.
     '''
     return df.dropna(subset=subset)
 
 
-def imputar_registros_nulos(df:pd.DataFrame, imputation_mapping:dict) -> pd.DataFrame:
+def replace_null_records(df:pd.DataFrame, imputation_mapping:dict) -> pd.DataFrame:
     '''
-    Imputa valores nulos en columnas específicas usando un mapeo definido.
+    Replaces null values in specific columns using a defined mapping.
 
     Args:
-        df (pd.DataFrame): DataFrame que contiene los registros con valores nulos.
-        imputation_mapping (dict): Diccionario donde las claves son los nombres de las columnas
-        y los valores son los valores con los que se reemplazarán los NaN.
+        df (pd.DataFrame): DataFrame containing records with null values.
+        imputation_mapping (dict): Dictionary where the keys are the column names
+            and the values are the values with which the NaNs will be replaced.
 
-            Ejemplo: {'edad': 0, 'nombre': 'Desconocido'}
+            Example: {'age': 0, 'name': 'Unknown'}
 
     Returns:
-    pd.DataFrame: DataFrame con los valores nulos imputados según el mapeo especificado.
+        pd.DataFrame: DataFrame with the null values imputed according to the specified mapping.
     '''
     return df.fillna(imputation_mapping)
 
 
-def contar_registros_nulos(df: pd.DataFrame, subset: list) -> None:
+def count_null_records(df: pd.DataFrame, subset: list) -> None:
     '''
-    Cuenta registros nulos en las columnas especificadas.
+    Counts null records in the specified columns.
 
     Args:
-        df (pd.DataFrame): DataFrame a procesar.
-        subset (list): Lista de columnas sobre las cuales se verificará la presencia de valores nulos.
+        df (pd.DataFrame): DataFrame to be processed.
+        subset (list): List of columns to be checked for null values.
 
     Returns:
         None
     '''
     for col in subset:
-        print(f"Valores nulos en columna {col}: {df[col].isnull().sum()}")
+        print(f"Null values in column {col}: {df[col].isnull().sum()}")
   
         
-def eliminar_columnas(df:pd.DataFrame, columnas:list) -> pd.DataFrame:
+def delete_columns(df:pd.DataFrame, columns:list) -> pd.DataFrame:
     '''
-    Elimina la/s columna/s pasadas como parametro
-    '''
-    # if all(isinstance(col, (int, np.integer)) for col in columnas):
-    #     columnas = [str(col) for col in columnas]
-        
-    return df.drop(columns=columnas)
+    Remove the previous column(s) as a parameter
+    ''' 
+    return df.drop(columns=columns)
         

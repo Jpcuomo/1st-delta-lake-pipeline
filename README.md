@@ -7,7 +7,7 @@ Complete data engineering pipeline that processes financial data from Binance AP
 ![Pandas](https://img.shields.io/badge/Pandas-Data_Processing-green)
 ![Delta Lake](https://img.shields.io/badge/Delta_Lake-Storage-orange)
 
-## 📖 The Story Behind This Project
+## The Story Behind This Project
 
 This project was born behind the necesity of processing financial data in real time with quality warranties. I deployed a pipeline capable of:
 
@@ -21,8 +21,8 @@ flowchart LR
     A[API Binance] --> B[Bronze<br/>Raw Data]
     B --> C[Silver<br/>Cleaned Data]
     C --> D[Gold<br/>Enriched Data]
-    D --> E[📊 Automated Reports]
-    D --> F[✅ Quality Tests]
+    D --> E[Automated Reports]
+    D --> F[Quality Tests]
 ```
 
 ## Arcitecture Deep Dive
@@ -82,7 +82,7 @@ def setup_logging(tipo_extraccion:str, level:int=logging.INFO) -> None:
         ]
     )
 ```
-### Logging example
+### Logging sample
 
 ![logs1](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/log1.png)
 ![logs2](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/logs2.png)
@@ -110,7 +110,7 @@ def generar_profiling_report(df:pd.DataFrame) -> ProfileReport|None:
         return None
 ```
 
-### Example of generated report:
+### Sample of generated report:
 
 ![imagen](https://github.com/Jpcuomo/1st-delta-lake-pipeline/blob/feature/imagenes/YData2.png)
 

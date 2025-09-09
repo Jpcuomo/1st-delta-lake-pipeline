@@ -13,8 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Metadata
 #----------------------------------------------
 INCREMENTAL_DIR = Path("metadata") / "incremental.json"
-CARPETA_INCREMENTAL = INCREMENTAL_DIR.parent
-ARCHIVO_INCREMENTAL = INCREMENTAL_DIR.name
+INCREMENTAL_FOLDER = INCREMENTAL_DIR.parent
+INCREMENTAL_FILE = INCREMENTAL_DIR.name
 
 #----------------------------------------------
 # Logs

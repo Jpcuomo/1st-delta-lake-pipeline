@@ -1,124 +1,123 @@
 import pandas as pd
-import numpy as np
 import logging
 
 
-def ordenar_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd.DataFrame:
+def sort_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd.DataFrame:
     """
-    Ordena un DataFrame según una columna.
+    Sort a DataFrame by a column.
 
     Args:
-        df (pd.DataFrame): DataFrame a ordenar.
-        sort_by (str): Nombre de la columna por la cual ordenar.
-        ascending (bool, optional): Orden ascendente si es True (default).
+        df (pd.DataFrame): DataFrame to sort.
+        sort_by (str): Name of the column to sort by.
+        ascending (bool, optional): Ascending order if True (default).
 
     Returns:
-        pd.DataFrame: DataFrame ordenado.
+        pd.DataFrame: Sorted DataFrame.
     """
-    print(f'Ordenando DataFrame por {sort_by}...')
+    print(f'Sorting DataFrame by {sort_by}...')
     return df.sort_values(by=sort_by, ascending=ascending)
 
 
 import pandas as pd
 import logging
 
-def renombrar_columnas(df: pd.DataFrame, columnas_dict: dict) -> pd.DataFrame:
+def rename_columns(df: pd.DataFrame, dict_colums: dict) -> pd.DataFrame:
     """
-    Renombra columnas de un DataFrame según un diccionario.
+    Rename columns in a DataFrame according to a dictionary.
 
     Args:
-        df (pd.DataFrame): DataFrame de entrada
-        columnas_dict (dict): Diccionario {columna_original: columna_nueva}
+        df (pd.DataFrame): Input DataFrame
+        dict_columns (dict): Dictionary {original_name: new_name}
 
     Returns:
-        pd.DataFrame: DataFrame con columnas renombradas
+        pd.DataFrame: DataFrame with renamed columns
     """
     logger = logging.getLogger('data_transformations')
 
-    if not isinstance(columnas_dict, dict):
-        logger.error("Error: el parámetro debe ser un diccionario")
-        raise TypeError("El parámetro 'columnas_dict' debe ser un diccionario")
+    if not isinstance(dict_colums, dict):
+        logger.error("Error: the parameter must be a dictionary")
+        raise TypeError("The 'dict_columns' parameter must be a dictionary.")
     
-    if not columnas_dict:
-        logger.error("Error: el diccionario no puede ser vacío")
-        raise ValueError("El diccionario no puede ser vacío")
+    if not dict_colums:
+        logger.error("Error: The dictionary cannot be empty.")
+        raise ValueError("The dictionary cannot be empty.")
 
-    columnas_actuales = list(df.columns)
-    faltantes = [c for c in columnas_dict.keys() if c not in columnas_actuales]
+    current_columns = list(df.columns)
+    missing_columns = [c for c in dict_colums.keys() if c not in current_columns]
 
-    for col in faltantes:
-        logger.warning(f"La columna '{col}' no existe en el DataFrame. No se aplicará el renombrado.")
+    for col in missing_columns:
+        logger.warning(f"The column '{col}' does not exist in the DataFrame. Renaming will not be applied.")
 
     try:
-        return df.rename(columns=columnas_dict)
+        return df.rename(columns=dict_colums)
     except Exception as e:
-        logger.error(f"Error al renombrar columnas: {e}")
+        logger.error(f"Error renaming columns: {e}")
         raise
 
     
-def castear_tipos_de_dato(df: pd.DataFrame, conversion_mapping: dict) -> pd.DataFrame:
+def cast_data_types(df: pd.DataFrame, conversion_mapping: dict) -> pd.DataFrame:
     """
-    Cambia los tipos de dato de columnas en un DataFrame usando un mapeo.
+    Change the data types of columns in a DataFrame using mapping.
     
     Args:
-        df (pd.DataFrame): DataFrame de Pandas.
-        conversion_mapping (dict): Diccionario con formato {columna: tipo}, por ejemplo {"col1": "int", "col2": "float"}.
+        df (pd.DataFrame): Pandas DataFrame.
+        conversion_mapping (dict): Dictionary with format {column: type}, for example {"col1": "int", "col2": "float"}.
     
     Returns:
-        pd.DataFrame: DataFrame con las columnas convertidas a los tipos especificados.
+        pd.DataFrame: DataFrame with columns converted to the specified types.
     """
     try:
         return df.astype(conversion_mapping)
     except KeyError as e:
-        print(f"Error: alguna columna no existe en el DataFrame -> {e}")
+        print(f"Error: some column does not exist in the DataFrame -> {e}")
         return df
     except ValueError as e:
-        print(f"Error de conversión de tipos -> {e}")
+        print(f"Type conversion error -> {e}")
         return df
     
     
-def convertir_milisegundos_a_datetime(df:pd.DataFrame, cols:list[str]) -> pd.DataFrame:
+def convert_milliseconds_to_datetime(df:pd.DataFrame, cols:list[str]) -> pd.DataFrame:
     '''
-    Convierte una o varias columnas de un DataFrame que contienen valores en milisegundos 
-    a tipo datetime64[ns].
+    Converts one or more columns of a DataFrame containing values in milliseconds 
+    to datetime64[ns] type.
 
-    Parámetros
+    Parameters
     ----------
     df : pd.DataFrame
-        DataFrame que contiene las columnas a convertir.
+        DataFrame containing the columns to be converted.
     cols : list[str]
-        Lista de nombres de columnas a transformar.
+        List of column names to be transformed.
 
-    Retorna
+    Returns
     -------
     pd.DataFrame
-        DataFrame con las columnas seleccionadas convertidas a datetime64[ns].
+        DataFrame with the selected columns converted to datetime64[ns].
 
-    Notas
+    Notes
     -----
-    - Se usa `pd.to_datetime` con el argumento `unit='ms'` para indicar que los valores
-      representan milisegundos desde época Unix (1970-01-01).
-    - `errors='coerce'` asegura que los valores inválidos se conviertan en `NaT` en lugar de 
-      provocar un error.
-    - `exact=True` obliga a que el parsing sea exacto (más estricto).
+    - `pd.to_datetime` is used with the argument `unit='ms'` to indicate that the values
+       represent milliseconds since the Unix epoch (1970-01-01).
+    - `errors='coerce'` ensures that invalid values are converted to `NaT` instead of 
+       causing an error.
+    - `exact=True` forces exact (stricter) parsing.
     '''
     return df[cols].apply(lambda col: pd.to_datetime(col, unit='ms', errors='coerce', exact=True))
 
 
-def cambiar_posicion_de_columna(df:pd.DataFrame, col_deseada:str, col_desplazada:str) -> pd.DataFrame:
+def change_column_position(df:pd.DataFrame, desired_col:str, shifted_col:str) -> pd.DataFrame:
     """
-    Mueve la columna `col_deseada` a la posición donde está `col_desplazada`.
+    Move the column `desired_col` to the position where `shifted_col` is located..
 
     Args:
-        df (pd.DataFrame): DataFrame original
-        col_deseada (str): columna que marca la posición destino
-        col_desplazada (str): columna que se moverá
+        df (pd.DataFrame): Original DataFrame
+        desired_col (str): Column that marks the destination position
+        shifted_col (str): Column that will be moved
 
     Returns:
-        pd.DataFrame: DataFrame con las columnas reordenadas
+        pd.DataFrame: DataFrame with the columns reordered
     """
     cols = list(df.columns)
-    indice_col_deseada = cols.index(col_deseada)
-    indice_col_desplazada = cols.index(col_desplazada)
-    cols.insert(indice_col_desplazada, cols.pop(indice_col_deseada))
+    desired_col_index = cols.index(desired_col)
+    shifted_col_index = cols.index(shifted_col)
+    cols.insert(shifted_col_index, cols.pop(desired_col_index))
     return df[cols]

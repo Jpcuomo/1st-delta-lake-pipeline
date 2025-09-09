@@ -1,83 +1,83 @@
 import json
 import requests
 import logging
-from src.utils.config_utils import obtener_archivo_incremental
+from src.utils.file_utils import get_incremental_data
 
 logger = logging.getLogger('pipeline')
 
 
 def get_data(base_url:str, endpoint:str, data_field:str=None, params:dict=None, headers:dict=None) -> dict | list | None:
     """
-    Realizar una solicitud GET a una API para obtener datos.
-    
+    Make a GET request to an API to obtain data.
+
     Args:
-        base_url (str): La URL base de la API.
-        endpoint (str): El endpoint de la API al que se realizará la solicitud.
-        params (dict): Parámetros de consulta para enviar con la solicitud.
-        data_field (str): El nombre del campo en el JSON que contiene los datos.
-        headers (dict): Encabezados para enviar la solicitud.
+    base_url (str): The base URL of the API.
+    endpoint (str): The API endpoint to which the request will be made.
+        params (dict): Query parameters to send with the request.
+        data_field (str): The name of the field in the JSON that contains the data.
+        headers (dict): Headers to send with the request.
     
     Returns:
-        dict|list|None: Los datos obtenidos de la API en formato JSON.
+        dict|list|None: The data obtained from the API in JSON format.
     """
     try:
         endpoint_url = f"{base_url}/{endpoint}"
         response = requests.get(endpoint_url, params=params, headers=headers)
         response.raise_for_status()
         
-        logger.info(f'Código de estado: {response.status_code}. Petición aceptada!')
+        logger.debug(f'Status code: {response.status_code}. Request accepted!')
         
         try:
             data = response.json()
             if data_field:
                 data = data[data_field]
         except:
-            logger.error("La respuesta no es un JSON válido")
+            logger.error("The response is not valid JSON.")
             return None
         return data
     except requests.exceptions.RequestException as e:
-        logger.error(f"La petición ha fallado. código de error: {e}")
+        logger.error(f"The request failed. Error code: {e}")
         
         
-def get_data_incremental(ruta_archivo_incremental: str, base_url: str, endpoint: str, params: dict = None, headers: dict = None) -> dict|None:
+def get_incremental_extraction(incremental_file_path: str, base_url: str, endpoint: str, params: dict = None, headers: dict = None) -> dict|None:
     """
-    Realiza una extracción incremental usando 'id' como campo incremental.
-    Guarda el último id en un archivo JSON para la siguiente ejecución.
+    Perform an incremental extraction using 'id' as the incremental field.
+    Save the last id in a JSON file for the next execution.
     
     Args:
-        ruta_archivo_incremental (str): ruta relativa al archivo .json con la variable de control incremental.
-        base_url (str): La URL base de la API.
-        endpoint (str): El endpoint de la API al que se realizará la solicitud.
-        params (dict): Parámetros de consulta para enviar con la solicitud.
-        headers (dict): Encabezados para enviar la solicitud.
+        incremental_file_path (str): relative path to the .json file with the incremental control variable.
+        base_url (str): The base URL of the API.
+        endpoint (str): The API endpoint to which the request will be made.
+        params (dict): Query parameters to send with the request.
+        headers (dict): Headers to send with the request.
     
     Returns:
-        dict|None: Los datos obtenidos de la API en formato JSON.
+        dict|None: The data obtained from the API in JSON format.
     
     """
-    # Leer último ID guardado
-    archivo_incremental = obtener_archivo_incremental(ruta_archivo_incremental)
-    if not archivo_incremental or ('ultimo_valor' not in archivo_incremental and 'valor_previo' not in archivo_incremental):
-        logger.error('Archivo incremental no creado o sin campo "ultimo_valor" o "valor_previo".')
+    # Read last saved ID
+    incremental_content = get_incremental_data(incremental_file_path)
+    if not incremental_content or ('last_value' not in incremental_content and 'previous_value' not in incremental_content):
+        logger.error('Incremental file not created or without "last_value" or "previous_value" field.')
         return None
 
-    ultimo_valor = archivo_incremental['ultimo_valor']
-    valor_previo =archivo_incremental['valor_previo']
+    last_value = incremental_content['last_value']
+    previous_value =incremental_content['previous_value']
         
     params = params or {}
-    params["fromId"] = ultimo_valor + 1
+    params["fromId"] = last_value + 1
 
-    # Llamada a la API
-    datos = get_data(base_url, endpoint, params=params, headers=headers)
-    logger.info(f"Solicitando desde ID: {ultimo_valor + 1}")
+    # API call
+    data = get_data(base_url, endpoint, params=params, headers=headers)
+    logger.debug(f"Requesting from ID: {last_value + 1}")
 
-    # Filtrar solo IDs mayores al último valor
-    nuevo_valor = max(dato['id'] for dato in datos)
+    # Filter only IDs greater than the last value
+    new_value = max(d['id'] for d in data)
 
-    # Actualizar el último valor
-    with open(ruta_archivo_incremental, "w", encoding="utf-8") as f:
-        json.dump({"valor_previo":valor_previo,"ultimo_valor": nuevo_valor}, f, indent=4, ensure_ascii=False)
+    # Update the last value
+    with open(incremental_file_path, "w", encoding="utf-8") as f:
+        json.dump({"previous_value":previous_value,"last_value": new_value}, f, indent=4, ensure_ascii=False)
 
-    logger.info(f"Archivo incremental actualizado: {ultimo_valor} -> {nuevo_valor}")
+    logger.debug(f"Updated incremental file: {last_value} -> {new_value}")
 
-    return datos
+    return data

@@ -1,5 +1,5 @@
 """
-Constantes y seteos para el proyecto pipeline ETL/ELT de Binance API.
+Constants and settings for the Binance API ETL/ELT pipeline project.
 """
 
 import os
@@ -10,24 +10,24 @@ from datetime import datetime
 logger = logging.getLogger('pipeline')
 
 #---------------------------------------------------------
-# Carga de variables de entorno
+# Loading environment variables
 #---------------------------------------------------------
 load_dotenv()
 
 #---------------------------------------------------------
-# Validaciones y casteos de variables de entorno
+# Validations and casting of environment variables
 #---------------------------------------------------------
 def get_env_int(var_name:str, default:int) -> int:
-    """Retorna variable de entorno int con validacion"""
+    """Returns an int environment variable with validation"""
     try:
         valor = os.getenv(var_name)
         return int(valor) if valor is not None else default
     except ValueError:
-        logger.warning(f'La variable de entorno debe ser un entero. Usando {default} por defecto')
+        logger.warning(f'The environment variable must be an integer. Using {default} by default.')
         return default
     
 def get_env_datetime(var_name:str, default:datetime) -> datetime:
-    """Retorna variable de entorno datetime con validacion"""
+    """Returns a datetime environment variable with validation"""
     valor = os.getenv(var_name)
     if valor:
         try:
@@ -35,27 +35,27 @@ def get_env_datetime(var_name:str, default:datetime) -> datetime:
                 valor = valor.replace('Z', '+00:00')
             return datetime.fromisoformat(valor)
         except ValueError:
-            logger.warning(f'Fecha inválida, usando {default} por defecto')
+            logger.warning(f'Invalid date, using {default} by default')
     return default
 
 def get_env_str(var_name: str, default: str) -> str:
-    """Retorna variable de entorno string con validacion"""
+    """Returns a string environment variable with validation"""
     value = os.getenv(var_name)
     return value if value is not None else default
 
 def datetime_to_millis(dt: datetime) -> int:
-    """Conversión de datetime a milisegundos"""
+    """Conversion from datetime to milliseconds"""
     return int(dt.timestamp() * 1000)
     
 
 #---------------------------------------------------------
-# Inicialización del archivo incremental (metadata)
-# (para API Historical_trades)
+# Initialization of the incremental file (metadata)
+# (for Historical_trades API)
 #---------------------------------------------------------
-CONTENIDO_INCREMENTAL = {'valor_previo':0,'ultimo_valor':0}
+INCREMENTAL_CONTENT = {'previous_value':0,'last_value':0}
 
 #---------------------------------------------------------
-# Parametros de la API Historical_trades
+# Historical_trades API parameters
 #---------------------------------------------------------
 BINANCE_API_KEY = os.getenv('BINANCE_API_KEY')
 SYMBOL = get_env_str('HIST_TRADES_SYMBOL', 'SOLUSDT')
@@ -64,7 +64,7 @@ FROM_ID = get_env_int('HIST_TRADES_FROM_ID', 0)
 BATCH_QTTY = get_env_int('HIST_TRADES_BATCH_QTTY', 1)
 
 #---------------------------------------------------------
-# Parametros de la API Klines
+# Klines API parameters
 #---------------------------------------------------------
 KLINES_SYMBOL = get_env_str('KLINES_SYMBOL', 'SOLUSDT')
 KLINES_INTERVAL = get_env_str('KLINES_INTERVAL', '1m')
@@ -74,11 +74,11 @@ KLINES_LIMIT = get_env_int('KLINES_LIMIT', 1000)
 
 
 #---------------------------------------------------------
-# Diccionario 
+# Dictionary with general APIs configurations 
 #---------------------------------------------------------
 BASE_URL = 'https://api.binance.com/api/v3'
 
-BINANCE_API = {
+BINANCE_API_CONFIG = {
     'historical_trades':{ # Endpoint historicalTrades
         'base_url':BASE_URL,
         'endpoint':'historicalTrades',
@@ -106,10 +106,10 @@ BINANCE_API = {
 }
 
 #---------------------------------------------------------
-# Parámetros y settings para API Binance/Historical_trades
+# Parameters and settings for Binance API/Historical_trades
 #---------------------------------------------------------
-NOMBRE_COLUMNAS_DESEADAS_HT = {
-    'time': 'miliseconds',
+DESIRED_COLS_HT = {
+    'time': 'milliseconds',
     'qty': 'quantity',
     'quoteQty': 'quote_qty',
     'isBuyerMaker': 'is_buyer_maker'
@@ -123,11 +123,11 @@ CONVERSION_MAPPING_HT = {
 
 
 #---------------------------------------------------------
-# Parámetros y settings para API Binance/Klines
+# Parameters and settings for Binance/Klines API
 #---------------------------------------------------------
 
-# Diccionario para renombrar columnas con nombres deseados
-NOMBRE_COLUMNAS_DESEADAS_KL = {
+# Dictionary for renaming columns with desired names
+DESIRED_COLS_KL = {
     0:"open_time",
     1:"open",
     2:"high",
@@ -141,7 +141,7 @@ NOMBRE_COLUMNAS_DESEADAS_KL = {
     10:"tb_quote_asset_volume",
     11:"ignore"}
 
-# Mapeo de columnas para conversion de tipo de dato
+# Column mapping for data type conversion
 CONVERSION_MAPPING_KL = {
     "open":"float32",
     "high":"float32",
@@ -156,9 +156,9 @@ CONVERSION_MAPPING_KL = {
 
 
 #---------------------------------------------------------
-# Otros settings generales
+# Other general settings
 #---------------------------------------------------------
-# Formato de archivos
+# File format
 FILE_FORMATS = {
     'delta_format':'delta',
     'parquet_format':'parquet',

@@ -1,23 +1,16 @@
 #!/usr/bin/env python3
 """
-Pipeline completo ETL para extracción full de datos de API de Binance.
-Ejecuta: extracción -> transformación -> carga
+Complete ETL pipeline for full data extraction from Binance API.
+Executes: extraction -> transformation -> loading
 """
 
 import logging
 import pandas as pd
-import sys
 from datetime import datetime
-from pathlib import Path
 from config import logging_config
-
-# # Configuracion de paths para importaciones
-# root_path = Path(__file__).resolve().parent.parent
-# if str(root_path) not in sys.path:
-#     sys.path.insert(0, str(root_path))
     
-from config.settings import (BINANCE_API, 
-                             NOMBRE_COLUMNAS_DESEADAS_KL, 
+from config.settings import (BINANCE_API_CONFIG, 
+                             DESIRED_COLS_KL, 
                              CONVERSION_MAPPING_KL)
 from config.paths import (PATH_BRONZE_DELTALAKE_FULL, 
                           PATH_SILVER_DELTALAKE_FULL, 
@@ -26,141 +19,145 @@ from config.paths import (PATH_BRONZE_DELTALAKE_FULL,
                           REPORTS_FULL)
 from src.utils import helpers, memory_utils
 from src.extract import api_extractor, data_loader
-from src.transform import data_cleaning, data_transformation, aggregations
+from src.transform import data_cleaning, data_transformation as dt, aggregations
 from src.load import delta_writer
 from src.quality import profiling
 
-# Configuracion de paths para importaciones
+# Configuring paths for imports
 helpers.setup_paths()
 
-# Configuración de logging y creación de carpeta de logs
-logging_config.setup_logging('full')
+# Logging configuration and log folder creation
+logging_config.logging_setup('full')
 
 logger = logging.getLogger("pipeline")
 
 
 def run_full_pipeline():
-    """Ejecuta el pipeline completo de ETL"""
+    """Run the complete ETL pipeline"""
     try:
-        logger.info("Iniciando pipeline completo")
+        logger.info("Starting full pipeline")
         start_time = datetime.now()
         
         
         #---------------------------------------
-        # 1. EXTRACCIÓN
+        # 1. EXTRACT
         #---------------------------------------
-        logger.info("Etapa 1: Extracción")
+        logger.info("""
+                    -------------------------
+                    Stage 1: Extraction
+                    -------------------------""")
         
-        BINANCE_KLINES = BINANCE_API['klines']
+        BINANCE_KLINES = BINANCE_API_CONFIG['klines']
         datos = api_extractor.get_data(BINANCE_KLINES['base_url'], 
                                        BINANCE_KLINES['endpoint'], 
                                        params=BINANCE_KLINES['params'], 
                                        headers=BINANCE_KLINES['headers'])
      
         df_raw = data_loader.build_table(datos)
-        logger.info(f"Extraídos {len(df_raw)} registros")
+        
+        logger.info(f"{len(df_raw)} records extracted")
         
         
         #---------------------------------------
-        # 2. TRANSFORMACIÓN
+        # 2. TRANSFORM
         #---------------------------------------
-        logger.info("Etapa 2: Transformación")
+        logger.info("Stage 2: Transformation")
         
-        # Modificacion de columnas
-        df_clean = data_transformation.renombrar_columnas(df_raw, NOMBRE_COLUMNAS_DESEADAS_KL)
+        # Column modification
+        df_clean = dt.rename_columns(df_raw, DESIRED_COLS_KL)
         print(df_clean.head())
-        df_clean = data_cleaning.eliminar_columnas(df_clean, ['ignore'])
+        df_clean = data_cleaning.delete_columns(df_clean, ['ignore'])
         
-        # Verifico tipos de datos y espacio en memoria
-        memory_utils.mostrar_espacio_en_memoria_df(df_clean) 
+        # Check data types and memory usage
+        memory_utils.show_df_memory_space(df_clean) 
         
-        # Limpieza de registros duplicados y con valores nulos
-        df_clean = data_cleaning.eliminar_duplicados(df_clean, subset=['open_time'])
-        df_clean = data_cleaning.eliminar_registros_nulos(df_clean, ['open_time', 'close_time'])
+        # Cleaning duplicate records and records with null values
+        df_clean = data_cleaning.remove_duplicates(df_clean, subset=['open_time'])
+        df_clean = data_cleaning.delete_null_records(df_clean, ['open_time', 'close_time'])
         
-        # Casteo de tipos de dato
-        df_clean[['open_time', 'close_time']] = data_transformation.convertir_milisegundos_a_datetime(df_clean, ['open_time', 'close_time'])
-        df_clean = data_transformation.castear_tipos_de_dato(df_clean, CONVERSION_MAPPING_KL)
+        # Data type casting
+        df_clean[['open_time', 'close_time']] = dt.convert_milliseconds_to_datetime(df_clean, ['open_time', 'close_time'])
+        df_clean = dt.cast_data_types(df_clean, CONVERSION_MAPPING_KL)
         
-        # Verifico tipos de datos y espacio en memoria
-        memory_utils.mostrar_espacio_en_memoria_df(df_clean)
+        # Check data types and memory space.
+        memory_utils.show_df_memory_space(df_clean)
         
-        logger.info(f"Transformados {len(df_clean)} registros")
+        logger.info(f"Transformed {len(df_clean)} records")
         print(df_clean.head())
         
         
         #---------------------------------------
-        # 3. SUMARIZACION
+        # 3. SUMMARIZE
         #---------------------------------------
-        logger.info("Etapa 3: Sumarizacion")
+        logger.info("Stage 3: Summarization")
         
-        # Separo la columna open_time en year y month para agrupar
+        # Split the open_time column into year and month to group them.
         df_clean[["year", "month"]] = df_clean["open_time"].apply(lambda x: pd.Series([x.year, x.month]))
         
-        # Sumarización de data frame
+        # Data frame summarization
         by_col = ['year', 'month']
         agg_col = {'low':'mean','high':'mean','volume':'mean','num_trades':'sum'}
         rename_cols = {'low':'avg_low_price','high':'avg_high_price','volume':'avg_volume','num_trades':'total_trades'}
 
-        # Crear cuadro con agregaciones para análisis
+        # Create table with aggregations for analysis
         df_summarized = aggregations.sumarizar_df(df_clean, by_col, agg_col, rename_cols)
 
-        # Agrego a la tabla una columna con el total de trades por año
+        # Add a column to the table with the total number of trades per year.
         df_summarized["total_trades_per_year"] = (df_summarized.groupby(level=0)["total_trades"].transform("sum"))   
         print(df_summarized.head())
     
-        # Tabla pivote adicional
+        # Additional pivot table
         df_pivot = pd.pivot_table(
         df_clean,
-        values="num_trades", # Columna donde se aplican las agregaciones
+        values="num_trades", # Column where aggregations are applied
         index=["year", "month"], # GROUP BY
-        aggfunc=["min", "max","sum"] # Tipos de agregaciones a aplicar sobre num_trades
+        aggfunc=["min", "max","sum"] # Types of aggregations to apply to num_trades
         )
         print(df_pivot.head())
         
         
         #---------------------------------------
-        # 4. CARGA
+        # 4. LOAD
         #---------------------------------------
-        logger.info("Etapa 4: Carga")
+        logger.info("Stage 4: Loading")
         
         
-        # Guardar en bronze (datos crudos)
+        # Save in bronze (raw data))
         delta_writer.save_data_as_delta(df_raw, PATH_BRONZE_DELTALAKE_FULL / f"{BINANCE_KLINES['params']['symbol']}_raw")
         
-        # Guardar en silver (datos procesados)
+        # Save in silver (processed data)
         delta_writer.save_data_as_delta(df_clean, PATH_SILVER_DELTALAKE_FULL / f"{BINANCE_KLINES['params']['symbol']}_clean")
         
-        # Guardar en gold (datos agregados)
+        # Save in gold (aggregated data)
         delta_writer.save_data_as_delta(df_summarized, PATH_GOLD_SUMMARIZED_TABLE_FULL / f"{BINANCE_KLINES['params']['symbol']}_agg")
         
-        # Guardar en gold (tabla pivote)
+        # Save in gold (pivot table)
         delta_writer.save_data_as_delta(df_pivot, PATH_GOLD_PIVOT_TABLE_FULL / f"{BINANCE_KLINES['params']['symbol']}_pivot")
         
         
         #---------------------------------------
         # 5. QUALITY CHECK
         #---------------------------------------
-        logger.info("Etapa 5: Control de calidad")
+        logger.info("Stage 5: Quality check")
         
-        report = profiling.generar_profiling_report(df_clean)
+        report = profiling.generate_profiling_report(df_clean)
         report_path = REPORTS_FULL /f"profile_{BINANCE_KLINES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report.to_file(report_path)
 
 
         #---------------------------------------
-        # Métricas finales
+        # Final metrics
         #---------------------------------------
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
         
-        logger.info(f"Pipeline completado en {duration:.2f} segundos")
-        logger.info(f"Registros procesados: {len(df_clean)}")
-        logger.info(f"Reporte guardado en: {report_path}")
+        logger.info(f"Pipeline completed in {duration:.2f} seconds")
+        logger.info(f"Processed records: {len(df_clean)}")
+        logger.info(f"Report saved in: {report_path}")
         
     except Exception as e:
-        logger.error(f"Error en el pipeline: {e}")
+        logger.error(f"Pipeline error: {e}")
         raise
 
 if __name__ == "__main__":

@@ -2,19 +2,19 @@ import pandas as pd
 from ydata_profiling import ProfileReport
 
 
-def generar_profiling_report(df:pd.DataFrame) -> ProfileReport|None:
+def generate_profiling_report(df:pd.DataFrame) -> ProfileReport|None:
     '''
-    Devuleve un reporte detallado con caracteristicas del DataFrame,
-    como registros distintos, faltantes, tamaño en memoria, etc.
+    Returns a detailed report with DataFrame characteristics,
+    such as distinct records, missing records, memory size, etc.
 
     Args:
-        df (pd.DataFrame): DataFrame de Pandas que se desea analizar
-    
+        df (pd.DataFrame): Pandas DataFrame to be analyzed
+
     Returns:
-        ProfileReport: Informe sobre los perfiles
+        ProfileReport: Profile report
     '''
     if isinstance(df, pd.DataFrame):
         return ProfileReport(df)
     else:
-        print('El Data frame no es válido')
+        print('The data frame is invalid.')
         return None

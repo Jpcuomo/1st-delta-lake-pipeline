@@ -1,5 +1,5 @@
-from .profiling import generar_profiling_report
+from .profiling import generate_profiling_report
 
 __all__ = [
-    'generar_profiling_report'
+    'generate_profiling_report'
 ]
