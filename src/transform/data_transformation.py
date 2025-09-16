@@ -1,6 +1,8 @@
 import pandas as pd
 import logging
 
+logger = logging.getLogger('transformations')
+
 
 def sort_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd.DataFrame:
     """
@@ -17,9 +19,6 @@ def sort_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd
     print(f'Sorting DataFrame by {sort_by}...')
     return df.sort_values(by=sort_by, ascending=ascending)
 
-
-import pandas as pd
-import logging
 
 def rename_columns(df: pd.DataFrame, dict_colums: dict) -> pd.DataFrame:
     """
@@ -69,10 +68,10 @@ def cast_data_types(df: pd.DataFrame, conversion_mapping: dict) -> pd.DataFrame:
     try:
         return df.astype(conversion_mapping)
     except KeyError as e:
-        print(f"Error: some column does not exist in the DataFrame -> {e}")
+        logger.error(f"Error: some column does not exist in the DataFrame -> {e}")
         return df
     except ValueError as e:
-        print(f"Type conversion error -> {e}")
+        logger.error(f"Type conversion error -> {e}")
         return df
     
     

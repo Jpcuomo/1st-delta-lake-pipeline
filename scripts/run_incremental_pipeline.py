@@ -3,12 +3,13 @@
 Complete ETL pipeline for incremental extraction of Binance API
 Performs extraction -> transformation -> loading -> quality testing
 """
-
+# Dependencies
 import os
 import logging
 import pandas as pd
 from datetime import datetime
 
+# Packages
 from config.settings import (INCREMENTAL_CONTENT, 
                             DESIRED_COLS_HT, 
                             CONVERSION_MAPPING_HT, 
@@ -72,12 +73,14 @@ def run_incremental_pipeline():
         df_raw = delta_writer.read_recent_extraction(PATH_BRONZE_DELTALAKE_INCREMENTAL, INCREMENTAL_DIR)
         print(df_raw.head())
         
+        # Some metrics for raw data
         metrics['extracted_files'] = len(df_raw)
         min_id = df_raw['id'].min()
         max_id = df_raw['id'].max()
         metrics['min_id'] = min_id
         metrics['max_id'] = max_id
         
+        # Displays a warining message if the number of extracted files doesn't reach the LIMIT value
         if metrics['extracted_files'] < LIMIT:
              logger.warning(f'Warning! {metrics['extracted_files']} were extracted instead of {LIMIT}. Data might be axhausted')
                 
@@ -139,7 +142,7 @@ def run_incremental_pipeline():
         # Verification of data types and memory space after initiating transformations.
         memory_utils.show_df_memory_space(df_clean)
         
-        logger.info(f'{len(df_clean)} records were cleaned/transformed.')
+        logger.debug(f'{len(df_clean)} records were cleaned/transformed.')
         
         mem_size = df_clean.memory_usage(deep=True).sum()
         metrics['cleansed_data_size'] = mem_size / 1024
@@ -217,7 +220,7 @@ def run_incremental_pipeline():
         metrics['end_time'] = end_time
         
         duration = (end_time - start_time).total_seconds()
-        logger.info(f'Pipeline completed in: {duration:.2f} seconds')
+        logger.debug(f'Pipeline completed in: {duration:.2f} seconds')
         logger.debug(f"Processed records: {len(df_clean)}")
         logger.debug(f"Report saved in: {report_path}")
         
@@ -228,7 +231,7 @@ def run_incremental_pipeline():
         Records processed: {len(df_clean)}
         Duration: {duration:.2f} seconds
         Raw size: {metrics['raw_data_size']:.2f} MB -> Cleansed size: {metrics['cleansed_data_size']:.2f} MB
-        Report: {report_path}
+        Report: {f"profile_{BINANCE_HIST_TRADES['params']['symbol']}_{start_time.strftime('%Y%m%d_%H%M%S')}.html"}
         --------------------------------------------------------
         """
         logger.info(summary)
