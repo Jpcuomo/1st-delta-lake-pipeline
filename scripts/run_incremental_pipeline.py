@@ -171,7 +171,7 @@ def run_incremental_pipeline():
         }
         
         # Assign the summarized DF to a new DF
-        df_summarized = aggregations.sumarizar_df(df_clean, group_by_cols, agg_dict, rename_cols)
+        df_summarized = aggregations.summarize_df(df_clean, group_by_cols, agg_dict, rename_cols)
 
         # Rounding for presentation
         cols = ['mean_price', 'qty_per_hour', 'total_quote_qty']

@@ -100,7 +100,7 @@ def run_full_pipeline():
         rename_cols = {'low':'avg_low_price','high':'avg_high_price','volume':'avg_volume','num_trades':'total_trades'}
 
         # Create table with aggregations for analysis
-        df_summarized = aggregations.sumarizar_df(df_clean, by_col, agg_col, rename_cols)
+        df_summarized = aggregations.summarize_df(df_clean, by_col, agg_col, rename_cols)
 
         # Add a column to the table with the total number of trades per year.
         df_summarized["total_trades_per_year"] = (df_summarized.groupby(level=0)["total_trades"].transform("sum"))   

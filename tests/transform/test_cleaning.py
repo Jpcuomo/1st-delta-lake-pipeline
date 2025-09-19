@@ -145,3 +145,7 @@ def test_delete_columns():
     # Test 6: columns is empty
     with pytest.raises(ValueError):
         dc.delete_columns(df, [])
+        
+    # Test 7: columns is not a list
+    with pytest.raises(TypeError):
+        dc.delete_columns(df, {})

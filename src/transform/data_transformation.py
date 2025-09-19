@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 
-logger = logging.getLogger('transformations')
+logger = logging.getLogger(__name__)
 
 
 def sort_dataframe(df: pd.DataFrame, sort_by: str, ascending: bool = True) -> pd.DataFrame:
